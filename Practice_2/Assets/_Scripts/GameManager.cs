@@ -26,7 +26,7 @@ public class GameManager : MonoBehaviour
         timeManager = gameObject.AddComponent<TimeManager>();
         enemyManager = gameObject.AddComponent<EnemyManager>();
         enemyManager.Initialize(new Factory(enemyPrefab), player, maxEnemyCount, enemySpawnInterval);
-        fireController = new FireController(enemyManager);
+        fireController = new FireController(enemyManager, player);
 
         BindEvents();
         timeManager.StartGame();

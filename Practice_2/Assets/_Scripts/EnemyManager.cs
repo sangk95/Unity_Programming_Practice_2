@@ -14,7 +14,10 @@ public class EnemyManager : MonoBehaviour
     public Action AllEnemyDestroyed; 
     List<RecycleObject> enemies = new List<RecycleObject>();
 
+    /*  --FireController-- It's not nearest
+    public bool IsEnemyLeft{get{return enemies.Count>0;}}
     public Vector3 GetFirstEnemy{get{return enemies[0].transform.position;}}
+    */
     public void Initialize(Factory enemyFactory, PlayerController player, int maxEnemyCount, float enemySpawnInterval)
     {
         if(isInitialized)

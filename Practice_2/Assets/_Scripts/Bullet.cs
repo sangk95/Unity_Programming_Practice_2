@@ -20,6 +20,15 @@ public class Bullet : RecycleObject
         return distance < 0.1f;
     }
 
+    void OnTriggerEnter2D(Collider2D other) 
+    {
+        if(other.GetComponent<Enemy>() != null)
+        {
+            Destroyed?.Invoke(this);
+            return;
+        }
+    }
+
     void Update()
     {
         if(!isActivated)
