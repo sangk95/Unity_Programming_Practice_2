@@ -1,7 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using System;
+[RequireComponent(typeof(BoxCollider2D), typeof(Rigidbody2D))]
 public class PlayerController : MonoBehaviour
 {
     [SerializeField]
@@ -10,8 +11,19 @@ public class PlayerController : MonoBehaviour
     float elapsedFireTime;
     bool canShoot = true; 
     bool isGameStarted = false;
+    Rigidbody2D body;
+    BoxCollider2D box;
     Factory bulletFactory;
+    public Action FindEnemy;
 
+    public Vector3 GetPosition{get{return this.transform.position;}}
+    void Awake()
+    {
+        body = GetComponent<Rigidbody2D>();
+        box = GetComponent<BoxCollider2D>();
+        body.bodyType = RigidbodyType2D.Kinematic;
+        box.isTrigger = true;
+    }
     void Start()
     {
         bulletFactory = new Factory(bulletPrefab);
@@ -19,6 +31,12 @@ public class PlayerController : MonoBehaviour
     public void Gamestart()
     {
         isGameStarted = true;
+        StartCoroutine(FirstFireDelay());
+    }
+    IEnumerator FirstFireDelay()
+    {
+        yield return new WaitForSeconds(0.6f);
+        FindEnemy?.Invoke();
     }
     public void Fire(Vector3 position)
     {
@@ -48,6 +66,7 @@ public class PlayerController : MonoBehaviour
             if(elapsedFireTime > firedelay)
             {
                 canShoot = true;
+                FindEnemy?.Invoke();
                 elapsedFireTime = 0f;
             }
         }

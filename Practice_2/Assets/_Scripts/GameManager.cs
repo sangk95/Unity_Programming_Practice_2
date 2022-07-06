@@ -5,29 +5,45 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     [SerializeField]
+    Enemy enemyPrefab;
+    [SerializeField]
+    int maxEnemyCount = 20;
+    [SerializeField]
+    float enemySpawnInterval = 0.5f;
+    [SerializeField]
+    Transform playerPosition;
+    [SerializeField]
     PlayerController playerPrefab;
     PlayerController player;
-    MouseController mouseController;
+    FireController fireController;
+    EnemyManager enemyManager;
     TimeManager timeManager;
     // Start is called before the first frame update
     void Start()
     {
         player = Instantiate(playerPrefab);
-        mouseController = gameObject.AddComponent<MouseController>();
+        player.transform.position = playerPosition.position;
         timeManager = gameObject.AddComponent<TimeManager>();
+        enemyManager = gameObject.AddComponent<EnemyManager>();
+        enemyManager.Initialize(new Factory(enemyPrefab), player, maxEnemyCount, enemySpawnInterval);
+        fireController = new FireController(enemyManager);
 
         BindEvents();
         timeManager.StartGame();
     }
     void BindEvents()
     {
-        mouseController.FireButtonPressed += player.Fire;
+        player.FindEnemy += fireController.NearestEnemy;
+        fireController.Fire += player.Fire;
         timeManager.GameStarted += player.Gamestart;
+        timeManager.GameStarted += enemyManager.Gamestart;
     }
 
     void UnBind()
     {
-        mouseController.FireButtonPressed -= player.Fire;
+        player.FindEnemy -= fireController.NearestEnemy;
+        fireController.Fire -= player.Fire;
         timeManager.GameStarted -= player.Gamestart;
+        timeManager.GameStarted -= enemyManager.Gamestart;
     }
 }
