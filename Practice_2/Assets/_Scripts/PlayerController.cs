@@ -55,7 +55,6 @@ public class PlayerController : MonoBehaviour
         usedBullet.Destroyed -= this.BulletDestroy;
         bulletFactory.Restore(usedBullet);
     }
-
     void Update()
     {
         if(!isGameStarted)

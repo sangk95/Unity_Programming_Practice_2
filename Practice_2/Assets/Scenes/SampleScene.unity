@@ -236,8 +236,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22cba7dcfddc2d445aca42fd817d4730, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  backGround: []
   enemyPrefab: {fileID: 5244329202246966600, guid: 19451a6dd86a9dd43b0e10956d439b3d, type: 3}
-  maxEnemyCount: 20
+  maxWave: 2
+  waveEnemyCount: 5
+  waveSpawnInterval: 5
   enemySpawnInterval: 0.5
   playerPosition: {fileID: 1547348560}
   playerPrefab: {fileID: 2329165864308159304, guid: 40e11150833c2a8498188a9198d12709, type: 3}

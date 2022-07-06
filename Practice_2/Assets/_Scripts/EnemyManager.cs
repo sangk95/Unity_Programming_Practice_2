@@ -6,25 +6,31 @@ public class EnemyManager : MonoBehaviour
 {
     Factory enemyFactory;
     PlayerController player;
-    int maxEnemyCount = 20;
-    int currentEnemyCount;
+    int maxWave = 2;
+    int currentEnemyCount=0;
+    int waveEnemyCount = 5;
+    int currentWave=0;
+    float waveInterval = 5f;
     float enemySpawnInterval = 0.5f;
     bool isInitialized = false;
     public Action EnemyDestroyed;
     public Action AllEnemyDestroyed; 
+    public Action NextStage;
     List<RecycleObject> enemies = new List<RecycleObject>();
 
     /*  --FireController-- It's not nearest
     public bool IsEnemyLeft{get{return enemies.Count>0;}}
     public Vector3 GetFirstEnemy{get{return enemies[0].transform.position;}}
     */
-    public void Initialize(Factory enemyFactory, PlayerController player, int maxEnemyCount, float enemySpawnInterval)
+    public void Initialize(Factory enemyFactory, PlayerController player, int maxWave, int waveEnemyCount, float waveInterval, float enemySpawnInterval)
     {
         if(isInitialized)
             return;
         this.enemyFactory = enemyFactory;
         this.player = player;
-        this.maxEnemyCount = maxEnemyCount;
+        this.maxWave = maxWave;
+        this.waveEnemyCount = waveEnemyCount;
+        this.waveInterval = waveInterval;
         this.enemySpawnInterval = enemySpawnInterval;
         
         Debug.Assert(this.enemyFactory != null, "missile factory is null!");
@@ -39,9 +45,20 @@ public class EnemyManager : MonoBehaviour
     }
     IEnumerator AutoSpawnEnemy()
     {
-        while(currentEnemyCount < maxEnemyCount) 
+        while(true) 
         {
-            yield return new WaitForSeconds(enemySpawnInterval); 
+            if(waveEnemyCount <= currentEnemyCount)
+            {
+                yield return new WaitForSeconds(waveInterval);
+                currentEnemyCount = 0;
+                currentWave++;
+                if(currentWave >= maxWave)
+                    break;
+                SpawnEnemy();
+                NextStage?.Invoke();
+            }
+            else
+                yield return new WaitForSeconds(enemySpawnInterval); 
 
             SpawnEnemy();
         }
@@ -64,7 +81,7 @@ public class EnemyManager : MonoBehaviour
         int index = enemies.IndexOf(enemy);
         enemies.RemoveAt(index); 
         enemyFactory.Restore(enemy);
-        if (currentEnemyCount == maxEnemyCount && enemies.Count == 0)
+        if (currentWave == maxWave && enemies.Count == 0)
         {
             AllEnemyDestroyed?.Invoke();
         }

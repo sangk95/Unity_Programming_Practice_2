@@ -5,9 +5,15 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     [SerializeField]
+    Transform[] backGround;
+    [SerializeField]
     Enemy enemyPrefab;
     [SerializeField]
-    int maxEnemyCount = 20;
+    int maxWave = 2;
+    [SerializeField]
+    int waveEnemyCount = 5;
+    [SerializeField]
+    float waveInterval = 5f;
     [SerializeField]
     float enemySpawnInterval = 0.5f;
     [SerializeField]
@@ -25,7 +31,7 @@ public class GameManager : MonoBehaviour
         player.transform.position = playerPosition.position;
         timeManager = gameObject.AddComponent<TimeManager>();
         enemyManager = gameObject.AddComponent<EnemyManager>();
-        enemyManager.Initialize(new Factory(enemyPrefab), player, maxEnemyCount, enemySpawnInterval);
+        enemyManager.Initialize(new Factory(enemyPrefab), player, maxWave, waveEnemyCount, waveInterval, enemySpawnInterval);
         fireController = new FireController(enemyManager, player);
 
         BindEvents();
@@ -35,6 +41,7 @@ public class GameManager : MonoBehaviour
     {
         player.FindEnemy += fireController.NearestEnemy;
         fireController.Fire += player.Fire;
+        enemyManager.NextStage += fireController.NearestEnemy;
         timeManager.GameStarted += player.Gamestart;
         timeManager.GameStarted += enemyManager.Gamestart;
     }
@@ -43,6 +50,7 @@ public class GameManager : MonoBehaviour
     {
         player.FindEnemy -= fireController.NearestEnemy;
         fireController.Fire -= player.Fire;
+        enemyManager.NextStage -= fireController.NearestEnemy;
         timeManager.GameStarted -= player.Gamestart;
         timeManager.GameStarted -= enemyManager.Gamestart;
     }
