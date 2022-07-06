@@ -45,7 +45,7 @@ public class PlayerController : MonoBehaviour
         if(!canShoot)
             return;
         RecycleObject bullet = bulletFactory.Get();
-        Vector3 startPosition = this.transform.position + new Vector3(0, 1f, 0);
+        Vector3 startPosition = this.transform.position + new Vector3(0, 0.4f, 0);
         bullet.Activate(startPosition, position);
         bullet.Destroyed += this.BulletDestroy;
         canShoot = false;
