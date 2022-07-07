@@ -38,17 +38,33 @@ public class PlayerController : MonoBehaviour
         yield return new WaitForSeconds(0.6f);
         FindEnemy?.Invoke();
     }
-    public void Fire(Vector3 position)
+    public void FireReady(Vector3 position)
     {
         if(!isGameStarted)
             return;
         if(!canShoot)
             return;
+        StartCoroutine(SetFirePosition(position));
+    }
+    void Fire(Vector3 position)
+    {
         RecycleObject bullet = bulletFactory.Get();
         Vector3 startPosition = this.transform.position + new Vector3(0, 0.4f, 0);
         bullet.Activate(startPosition, position);
         bullet.Destroyed += this.BulletDestroy;
         canShoot = false;
+    }
+    IEnumerator SetFirePosition(Vector3 position)
+    {
+        while(Math.Abs(this.transform.position.x-position.x) > 0.1f)
+        {
+            if(this.transform.position.x > position.x)
+                this.transform.position += Vector3.left*0.1f;
+            else
+                this.transform.position += Vector3.right*0.1f;
+            yield return null;
+        }
+        Fire(position);
     }
     void BulletDestroy(RecycleObject usedBullet)
     {

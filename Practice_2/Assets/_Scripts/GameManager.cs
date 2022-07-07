@@ -9,6 +9,8 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     Enemy enemyPrefab;
     [SerializeField]
+    Unit unitPrefab;
+    [SerializeField]
     int maxWave = 2;
     [SerializeField]
     int waveEnemyCount = 5;
@@ -31,7 +33,7 @@ public class GameManager : MonoBehaviour
         player.transform.position = playerPosition.position;
         timeManager = gameObject.AddComponent<TimeManager>();
         enemyManager = gameObject.AddComponent<EnemyManager>();
-        enemyManager.Initialize(new Factory(enemyPrefab), player, maxWave, waveEnemyCount, waveInterval, enemySpawnInterval);
+        enemyManager.Initialize(unitPrefab, new Factory(enemyPrefab), player, maxWave, waveEnemyCount, waveInterval, enemySpawnInterval);
         fireController = new FireController(enemyManager, player);
 
         BindEvents();
@@ -40,7 +42,8 @@ public class GameManager : MonoBehaviour
     void BindEvents()
     {
         player.FindEnemy += fireController.NearestEnemy;
-        fireController.Fire += player.Fire;
+        fireController.Fire += player.FireReady;
+        fireController.Fire += enemyManager.resetActivate;
         enemyManager.NextStage += fireController.NearestEnemy;
         timeManager.GameStarted += player.Gamestart;
         timeManager.GameStarted += enemyManager.Gamestart;
@@ -49,7 +52,8 @@ public class GameManager : MonoBehaviour
     void UnBind()
     {
         player.FindEnemy -= fireController.NearestEnemy;
-        fireController.Fire -= player.Fire;
+        fireController.Fire -= player.FireReady;
+        fireController.Fire -= enemyManager.resetActivate;
         enemyManager.NextStage -= fireController.NearestEnemy;
         timeManager.GameStarted -= player.Gamestart;
         timeManager.GameStarted -= enemyManager.Gamestart;

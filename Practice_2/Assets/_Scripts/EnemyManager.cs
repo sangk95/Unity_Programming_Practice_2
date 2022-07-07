@@ -4,6 +4,7 @@ using UnityEngine;
 using System;
 public class EnemyManager : MonoBehaviour
 {
+    UnitGenerator[] unitGenerators = null;
     Factory enemyFactory;
     PlayerController player;
     int maxWave = 2;
@@ -17,15 +18,17 @@ public class EnemyManager : MonoBehaviour
     public Action AllEnemyDestroyed; 
     public Action NextStage;
     List<RecycleObject> enemies = new List<RecycleObject>();
+    Unit prefab;
 
     /*  --FireController-- It's not nearest
     public bool IsEnemyLeft{get{return enemies.Count>0;}}
     public Vector3 GetFirstEnemy{get{return enemies[0].transform.position;}}
     */
-    public void Initialize(Factory enemyFactory, PlayerController player, int maxWave, int waveEnemyCount, float waveInterval, float enemySpawnInterval)
+    public void Initialize(Unit prefab,Factory enemyFactory, PlayerController player, int maxWave, int waveEnemyCount, float waveInterval, float enemySpawnInterval)
     {
         if(isInitialized)
             return;
+        this.prefab = prefab;
         this.enemyFactory = enemyFactory;
         this.player = player;
         this.maxWave = maxWave;
@@ -38,13 +41,29 @@ public class EnemyManager : MonoBehaviour
 
         isInitialized = true;
     }
+    void Start()
+    {
+        unitGenerators = new UnitGenerator[maxWave];
+        for(int i=0 ; i<maxWave ; i++)
+        {
+            unitGenerators[i] = new PatternAGenerator(prefab);
+        }
+    }
     public void Gamestart()
     {
         currentEnemyCount = 0;
         StartCoroutine(AutoSpawnEnemy());
     }
     IEnumerator AutoSpawnEnemy()
-    {
+    {/*
+        unitGenerators[0].CreateUnits();
+        List<Unit> units = unitGenerators[0].getUnits();
+        foreach(Unit unit in units)
+        {
+            unit.transform.position = GetEnemySpawnPosition();
+            unit.Attack();
+            yield return null;
+        }*/
         while(true) 
         {
             if(waveEnemyCount <= currentEnemyCount)
@@ -61,6 +80,18 @@ public class EnemyManager : MonoBehaviour
                 yield return new WaitForSeconds(enemySpawnInterval); 
 
             SpawnEnemy();
+        }
+    }
+    public void resetActivate(Vector3 position)
+    {
+        StartCoroutine(reset());
+    }
+    IEnumerator reset()
+    {
+        yield return new WaitForSeconds(0.3f);
+        foreach(var enemy in enemies)
+        {
+            enemy.Activate(enemy.transform.position, player.GetPosition);
         }
     }
     void SpawnEnemy()
