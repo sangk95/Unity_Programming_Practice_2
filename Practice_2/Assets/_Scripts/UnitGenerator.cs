@@ -5,17 +5,23 @@ using UnityEngine;
 public class UnitGenerator
 {
     Unit[] prefab;
-    public UnitGenerator(Unit[] prefab)
+    int defaultPoolSize;
+    UnitFactory factory = new UnitFactory();
+
+    public UnitGenerator(Unit[] prefab, int defaultPoolSize = 5)
     {
         this.prefab = prefab;
-        
+        this.defaultPoolSize = defaultPoolSize;
         Debug.Assert(this.prefab!=null, "Prefab is null");
     }
-    public Unit CreatUnit(string unit)
+    public Unit GetUnit(string unit)
     {
-        UnitFactory factory = new UnitFactory();
-        Unit returnUnit = factory.CreateUnit(prefab, unit);
+        Unit returnUnit = factory.Get(prefab, unit, defaultPoolSize);
 
         return returnUnit;
+    }
+    public void Restore(Unit obj, string unit)
+    {
+        factory.Restore(obj, unit);
     }
 }

@@ -22,7 +22,7 @@ public class Bullet : RecycleObject
 
     void OnTriggerEnter2D(Collider2D other) 
     {
-        if(other.GetComponent<Enemy>() != null)
+        if(other.CompareTag("Enemy"))
         {
             Destroyed?.Invoke(this);
             return;

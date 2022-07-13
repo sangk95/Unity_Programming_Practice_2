@@ -3,20 +3,22 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-public abstract class Unit : MonoBehaviour
+[RequireComponent(typeof(BoxCollider2D), typeof(Rigidbody2D))]
+public abstract class Unit : Objects
 {
-    protected int Hp;
-    protected Vector3 targetPosition;
-    
-    public Action<Unit> Destroyed;
     Unit prefab;
+    protected int Hp;
+    protected float moveSpeed; 
+    BoxCollider2D box;
+    Rigidbody2D body;
     public abstract void Attack();
-    public virtual void Activate(Vector3 startPosition, Vector3 targetPosition)
+    public Action<Unit> Destroyed;
+    void Awake()
     {
-        transform.position = startPosition;
-        this.targetPosition = targetPosition;
-        Vector3 dir = (targetPosition - startPosition).normalized;
-        transform.rotation = Quaternion.LookRotation(transform.forward, dir);
+        box = GetComponent<BoxCollider2D>();
+        body = GetComponent<Rigidbody2D>();
+        body.bodyType = RigidbodyType2D.Kinematic;
+        box.isTrigger = true; 
     }
-    
+    public abstract void DestroySelf();
 }

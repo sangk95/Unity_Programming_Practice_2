@@ -5,7 +5,6 @@ using System;
 public class EnemyManager : MonoBehaviour
 {
     UnitGenerator unitGenerator;
-    Factory enemyFactory;
     PlayerController player;
     int maxWave = 2;
     int currentEnemyCount=0;
@@ -79,8 +78,11 @@ public class EnemyManager : MonoBehaviour
     {
         Debug.Assert(this.unitGenerator != null, "enemy factory is null!");
         Debug.Assert(this.player != null, "player is null!");
-
-        Unit unit = unitGenerator.CreatUnit("B");
+        Unit unit;
+        if(currentWave==0)
+            unit = unitGenerator.GetUnit("Enemy_A");
+        else
+            unit = unitGenerator.GetUnit("Enemy_B");
         unit.Activate(GetEnemySpawnPosition(), player.GetPosition);
 
         unit.Destroyed += this.OnEnemyDestroyed;
@@ -92,7 +94,7 @@ public class EnemyManager : MonoBehaviour
         enemy.Destroyed -= this.OnEnemyDestroyed;
         int index = enemies.IndexOf(enemy);
         enemies.RemoveAt(index); 
-       // enemyFactory.Restore(enemy);
+        unitGenerator.Restore(enemy, enemy.name);
         if (currentWave == maxWave && enemies.Count == 0)
         {
             AllEnemyDestroyed?.Invoke();
