@@ -625,7 +625,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   backGround: []
-  enemyPrefab: {fileID: 5244329202246966600, guid: 19451a6dd86a9dd43b0e10956d439b3d, type: 3}
+  unitPrefab:
+  - {fileID: 5039146375007334216, guid: 19451a6dd86a9dd43b0e10956d439b3d, type: 3}
+  - {fileID: 5039146375007334216, guid: a5af7ebc1e8b07349afc08ed411a7a19, type: 3}
   maxWave: 2
   waveEnemyCount: 5
   waveInterval: 5

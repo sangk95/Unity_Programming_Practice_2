@@ -7,7 +7,7 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField]
     Bullet bulletPrefab;
-    float firedelay = 1f;
+    float firedelay = 0.5f;
     float elapsedFireTime;
     bool canShoot = true; 
     bool isGameStarted = false;

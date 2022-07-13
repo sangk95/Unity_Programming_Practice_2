@@ -9,21 +9,16 @@ public class Enemy_A :  Unit
     float moveSpeed = 2f; 
     BoxCollider2D box;
     Rigidbody2D body;
-    Unit prefab;/*
     void Awake()
     {
         box = GetComponent<BoxCollider2D>();
         body = GetComponent<Rigidbody2D>();
         body.bodyType = RigidbodyType2D.Kinematic;
         box.isTrigger = true; 
-    }*/
-    public Enemy_A(Unit prefab)
+    }
+    void Start()
     {
-        this.prefab = prefab;
-        type = UnitType.enemy_A;
         Hp = 2;
-        
-        Debug.Assert(prefab != null, "Unit Prefab is null");
     }
     public override void Attack()
     {
@@ -46,14 +41,12 @@ public class Enemy_A :  Unit
     }
     void DestroySelf()
     {
-        isActivated = false;
         Destroyed?.Invoke(this);
-    }/*
+        Destroy(this.gameObject);
+    }
     void Update()
     {
-        if(!isActivated)
-            return;
         transform.position += transform.up * moveSpeed * Time.deltaTime;
-    }*/
+    }
     
 }

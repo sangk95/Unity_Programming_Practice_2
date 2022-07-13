@@ -7,9 +7,7 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     Transform[] backGround;
     [SerializeField]
-    Enemy enemyPrefab;
-    [SerializeField]
-    Unit unitPrefab;
+    Unit[] unitPrefab;
     [SerializeField]
     int maxWave = 2;
     [SerializeField]
@@ -33,7 +31,7 @@ public class GameManager : MonoBehaviour
         player.transform.position = playerPosition.position;
         timeManager = gameObject.AddComponent<TimeManager>();
         enemyManager = gameObject.AddComponent<EnemyManager>();
-        enemyManager.Initialize(unitPrefab, new Factory(enemyPrefab), player, maxWave, waveEnemyCount, waveInterval, enemySpawnInterval);
+        enemyManager.Initialize(new UnitGenerator(unitPrefab), player, maxWave, waveEnemyCount, waveInterval, enemySpawnInterval);
         fireController = new FireController(enemyManager, player);
 
         BindEvents();

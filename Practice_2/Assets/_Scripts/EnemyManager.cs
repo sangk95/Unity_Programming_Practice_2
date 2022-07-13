@@ -4,7 +4,7 @@ using UnityEngine;
 using System;
 public class EnemyManager : MonoBehaviour
 {
-    UnitGenerator[] unitGenerators = null;
+    UnitGenerator unitGenerator;
     Factory enemyFactory;
     PlayerController player;
     int maxWave = 2;
@@ -17,37 +17,26 @@ public class EnemyManager : MonoBehaviour
     public Action EnemyDestroyed;
     public Action AllEnemyDestroyed; 
     public Action NextStage;
-    List<RecycleObject> enemies = new List<RecycleObject>();
-    Unit prefab;
+    List<Unit> enemies = new List<Unit>();
 
     /*  --FireController-- It's not nearest
     public bool IsEnemyLeft{get{return enemies.Count>0;}}
     public Vector3 GetFirstEnemy{get{return enemies[0].transform.position;}}
     */
-    public void Initialize(Unit prefab,Factory enemyFactory, PlayerController player, int maxWave, int waveEnemyCount, float waveInterval, float enemySpawnInterval)
+    public void Initialize(UnitGenerator unitGenerator, PlayerController player, int maxWave, int waveEnemyCount, float waveInterval, float enemySpawnInterval)
     {
         if(isInitialized)
             return;
-        this.prefab = prefab;
-        this.enemyFactory = enemyFactory;
+        this.unitGenerator = unitGenerator;
         this.player = player;
         this.maxWave = maxWave;
         this.waveEnemyCount = waveEnemyCount;
         this.waveInterval = waveInterval;
         this.enemySpawnInterval = enemySpawnInterval;
         
-        Debug.Assert(this.enemyFactory != null, "missile factory is null!");
         Debug.Assert(this.player != null, "building manager is null!");
 
         isInitialized = true;
-    }
-    void Start()
-    {
-        unitGenerators = new UnitGenerator[maxWave];
-        for(int i=0 ; i<maxWave ; i++)
-        {
-            unitGenerators[i] = new PatternAGenerator(prefab);
-        }
     }
     public void Gamestart()
     {
@@ -55,15 +44,7 @@ public class EnemyManager : MonoBehaviour
         StartCoroutine(AutoSpawnEnemy());
     }
     IEnumerator AutoSpawnEnemy()
-    {/*
-        unitGenerators[0].CreateUnits();
-        List<Unit> units = unitGenerators[0].getUnits();
-        foreach(Unit unit in units)
-        {
-            unit.transform.position = GetEnemySpawnPosition();
-            unit.Attack();
-            yield return null;
-        }*/
+    {
         while(true) 
         {
             if(waveEnemyCount <= currentEnemyCount)
@@ -96,22 +77,22 @@ public class EnemyManager : MonoBehaviour
     }
     void SpawnEnemy()
     {
-        Debug.Assert(this.enemyFactory != null, "enemy factory is null!");
+        Debug.Assert(this.unitGenerator != null, "enemy factory is null!");
         Debug.Assert(this.player != null, "player is null!");
 
-        RecycleObject enemy = enemyFactory.Get();
-        enemy.Activate(GetEnemySpawnPosition(), player.GetPosition); 
+        Unit unit = unitGenerator.CreatUnit("B");
+        unit.Activate(GetEnemySpawnPosition(), player.GetPosition);
 
-        enemy.Destroyed += this.OnEnemyDestroyed;
-        enemies.Add(enemy);
+        unit.Destroyed += this.OnEnemyDestroyed;
+        enemies.Add(unit);
         currentEnemyCount++;
     }
-    void OnEnemyDestroyed(RecycleObject enemy) 
+    void OnEnemyDestroyed(Unit enemy) 
     {
         enemy.Destroyed -= this.OnEnemyDestroyed;
         int index = enemies.IndexOf(enemy);
         enemies.RemoveAt(index); 
-        enemyFactory.Restore(enemy);
+       // enemyFactory.Restore(enemy);
         if (currentWave == maxWave && enemies.Count == 0)
         {
             AllEnemyDestroyed?.Invoke();
