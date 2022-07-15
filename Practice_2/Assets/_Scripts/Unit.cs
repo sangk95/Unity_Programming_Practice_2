@@ -20,5 +20,23 @@ public abstract class Unit : Objects
         body.bodyType = RigidbodyType2D.Kinematic;
         box.isTrigger = true; 
     }
-    public abstract void DestroySelf();
+    void OnTriggerEnter2D(Collider2D other) 
+    {
+        if(other.GetComponent<PlayerController>() != null)
+        {
+            DestroySelf();
+            return;
+        }
+    }
+    public void Attacked(int damage)
+    {
+        Hp -= damage;
+        if(Hp <= 0)
+            DestroySelf();
+    }
+    public virtual void DestroySelf()
+    {
+        isActivated = false;
+        Destroyed?.Invoke(this);
+    }
 }

@@ -40,6 +40,7 @@ public class GameManager : MonoBehaviour
     void BindEvents()
     {
         player.FindEnemy += fireController.NearestEnemy;
+        player.HitEnemy += enemyManager.Attacked;
         fireController.Fire += player.FireReady;
         fireController.Fire += enemyManager.resetActivate;
         enemyManager.NextStage += fireController.NearestEnemy;
@@ -50,6 +51,7 @@ public class GameManager : MonoBehaviour
     void UnBind()
     {
         player.FindEnemy -= fireController.NearestEnemy;
+        player.HitEnemy -= enemyManager.Attacked;
         fireController.Fire -= player.FireReady;
         fireController.Fire -= enemyManager.resetActivate;
         enemyManager.NextStage -= fireController.NearestEnemy;

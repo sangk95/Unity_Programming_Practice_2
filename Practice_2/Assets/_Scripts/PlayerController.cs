@@ -7,6 +7,8 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField]
     Bullet bulletPrefab;
+    [SerializeField]
+    int bulletDamage = 1;
     float firedelay = 0.5f;
     float elapsedFireTime;
     bool canShoot = true; 
@@ -15,6 +17,7 @@ public class PlayerController : MonoBehaviour
     BoxCollider2D box;
     Factory bulletFactory;
     public Action FindEnemy;
+    public Action<int, Unit> HitEnemy;
 
     public Vector3 GetPosition{get{return this.transform.position;}}
     void Awake()
@@ -46,11 +49,11 @@ public class PlayerController : MonoBehaviour
             return;
         StartCoroutine(SetFirePosition(position));
     }
-    void Fire(Vector3 position)
+    void Fire()
     {
         RecycleObject bullet = bulletFactory.Get();
         Vector3 startPosition = this.transform.position + new Vector3(0, 0.4f, 0);
-        bullet.Activate(startPosition, position);
+        bullet.Activate(startPosition);
         bullet.Destroyed += this.BulletDestroy;
         canShoot = false;
     }
@@ -59,15 +62,16 @@ public class PlayerController : MonoBehaviour
         while(Math.Abs(this.transform.position.x-position.x) > 0.1f)
         {
             if(this.transform.position.x > position.x)
-                this.transform.position += Vector3.left*0.1f;
+                this.transform.position += Vector3.left*0.05f;
             else
-                this.transform.position += Vector3.right*0.1f;
+                this.transform.position += Vector3.right*0.05f;
             yield return null;
         }
-        Fire(position);
+        Fire();
     }
-    void BulletDestroy(RecycleObject usedBullet)
+    void BulletDestroy(RecycleObject usedBullet, Unit unit)
     {
+        HitEnemy?.Invoke(bulletDamage, unit);
         usedBullet.Destroyed -= this.BulletDestroy;
         bulletFactory.Restore(usedBullet);
     }

@@ -14,17 +14,13 @@ public class Bullet : RecycleObject
         box.isTrigger = true;
     }
 
-    bool isArrivedToTarget()
-    {
-        float distance = Vector3.Distance(transform.position, targetPosition);
-        return distance < 0.1f;
-    }
-
     void OnTriggerEnter2D(Collider2D other) 
     {
         if(other.CompareTag("Enemy"))
         {
-            Destroyed?.Invoke(this);
+            isActivated = false;
+            Unit unit = other.GetComponent<Unit>();
+            Destroyed?.Invoke(this, unit);
             return;
         }
     }
@@ -34,10 +30,5 @@ public class Bullet : RecycleObject
         if(!isActivated)
             return;
         transform.position += transform.up * speed * Time.deltaTime;
-        if(isArrivedToTarget())
-        {
-            isActivated = false;
-            Destroyed?.Invoke(this);
-        }
     }
 }

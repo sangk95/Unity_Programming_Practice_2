@@ -64,14 +64,14 @@ public class EnemyManager : MonoBehaviour
     }
     public void resetActivate(Vector3 position)
     {
-        StartCoroutine(reset());
+        StartCoroutine(Reset());
     }
-    IEnumerator reset()
+    IEnumerator Reset()
     {
         yield return new WaitForSeconds(0.3f);
         foreach(var enemy in enemies)
         {
-            enemy.Activate(enemy.transform.position, player.GetPosition);
+            enemy.ResetRotation(player.GetPosition);
         }
     }
     void SpawnEnemy()
@@ -89,12 +89,12 @@ public class EnemyManager : MonoBehaviour
         enemies.Add(unit);
         currentEnemyCount++;
     }
-    void OnEnemyDestroyed(Unit enemy) 
+    void OnEnemyDestroyed(Unit unit) 
     {
-        enemy.Destroyed -= this.OnEnemyDestroyed;
-        int index = enemies.IndexOf(enemy);
+        unit.Destroyed -= this.OnEnemyDestroyed;
+        int index = enemies.IndexOf(unit);
         enemies.RemoveAt(index); 
-        unitGenerator.Restore(enemy, enemy.name);
+        unitGenerator.Restore(unit, unit.name);
         if (currentWave == maxWave && enemies.Count == 0)
         {
             AllEnemyDestroyed?.Invoke();
@@ -110,6 +110,12 @@ public class EnemyManager : MonoBehaviour
         
         spawnPosition.z = 0f;
         return spawnPosition;
+    }
+
+    public void Attacked(int damage, Unit unit)
+    {
+        int index = enemies.IndexOf(unit);
+        enemies[index].Attacked(damage);
     }
 
 }

@@ -6,23 +6,8 @@ public class Enemy_A :  Unit
 {
     void Start()
     {
-        moveSpeed = 1f;
-        Hp = 2;
-    }
-    void OnTriggerEnter2D(Collider2D other) 
-    {
-        if(other.GetComponent<PlayerController>() != null)
-        {
-            DestroySelf();
-            return;
-        }
-        if(other.GetComponent<Bullet>() != null)
-        {
-            Hp--;
-            if(Hp==0)
-                DestroySelf();
-            return;
-        }
+        moveSpeed = 2f;
+        Hp = 1;
     }
     public override void Attack()
     {
@@ -32,7 +17,7 @@ public class Enemy_A :  Unit
     {
         isActivated = false;
         Destroyed?.Invoke(this);
-        Hp=2;
+        Hp=1;
     }
     void Update()
     {
