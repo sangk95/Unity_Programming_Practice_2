@@ -1,9 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using System;
 public class GameManager : MonoBehaviour
 {
+    [SerializeField]
+    int scorePerEnemy = 10;
+    [SerializeField]
+    int scorePerHeart = 100;
     [SerializeField]
     Transform[] backGround;
     [SerializeField]
@@ -20,10 +24,17 @@ public class GameManager : MonoBehaviour
     Transform playerPosition;
     [SerializeField]
     PlayerController playerPrefab;
+    [SerializeField]
+    UIRoot uIRoot;
+    
+    public Action<bool, int> GameEnded;
+    bool isAllHeartDestroyed = false;
+
     PlayerController player;
     FireController fireController;
     EnemyManager enemyManager;
     TimeManager timeManager;
+    ScoreManager scoreManager;
     // Start is called before the first frame update
     void Start()
     {
@@ -33,6 +44,7 @@ public class GameManager : MonoBehaviour
         enemyManager = gameObject.AddComponent<EnemyManager>();
         enemyManager.Initialize(new UnitGenerator(unitPrefab), player, maxWave, waveEnemyCount, waveInterval, enemySpawnInterval);
         fireController = new FireController(enemyManager, player);
+        scoreManager = new ScoreManager(scorePerEnemy, scorePerHeart);
 
         BindEvents();
         timeManager.StartGame();
@@ -41,21 +53,67 @@ public class GameManager : MonoBehaviour
     {
         player.FindEnemy += fireController.NearestEnemy;
         player.HitEnemy += enemyManager.Attacked;
+        player.AllHeartDestroyed += this.OnAllHeartDestroyed;
         fireController.Fire += player.FireReady;
         fireController.Fire += enemyManager.resetActivate;
         enemyManager.NextStage += fireController.NearestEnemy;
+        enemyManager.EnemyDestroyed += scoreManager.OnEnemyDestroyed;
+        enemyManager.AllEnemyDestroyed += this.OnAllEnemyDestroyed;
         timeManager.GameStarted += player.Gamestart;
         timeManager.GameStarted += enemyManager.Gamestart;
+        timeManager.GameStarted += uIRoot.OnGameStarted;
+        scoreManager.ScoreChanged += uIRoot.OnScoreChanged;
+
+        this.GameEnded += player.OnGameEnded;
+        this.GameEnded += enemyManager.OnGameEnded;
+        this.GameEnded += scoreManager.OnGameEnded;
+        this.GameEnded += uIRoot.OnGameEnded;
     }
 
-    void UnBind()
+    void UnBindEvents()
     {
         player.FindEnemy -= fireController.NearestEnemy;
         player.HitEnemy -= enemyManager.Attacked;
+        player.AllHeartDestroyed -= this.OnAllHeartDestroyed;
         fireController.Fire -= player.FireReady;
         fireController.Fire -= enemyManager.resetActivate;
         enemyManager.NextStage -= fireController.NearestEnemy;
+        enemyManager.EnemyDestroyed -= scoreManager.OnEnemyDestroyed;
+        enemyManager.AllEnemyDestroyed -= this.OnAllEnemyDestroyed;
         timeManager.GameStarted -= player.Gamestart;
         timeManager.GameStarted -= enemyManager.Gamestart;
+        timeManager.GameStarted -= uIRoot.OnGameStarted;
+        scoreManager.ScoreChanged -= uIRoot.OnScoreChanged;
+        
+        this.GameEnded -= player.OnGameEnded;
+        this.GameEnded -= enemyManager.OnGameEnded;
+        this.GameEnded -= scoreManager.OnGameEnded;
+        this.GameEnded -= uIRoot.OnGameEnded;
     }
+    
+    void OnDestroy()
+    {
+        UnBindEvents();   
+    }
+
+    void OnAllHeartDestroyed()
+    {
+        isAllHeartDestroyed = true;
+        GameEnded?.Invoke(false, player.HeartCount);
+       // AudioManager.instance.PlaySound(SoundId.GameEnd); 
+    }
+    void OnAllEnemyDestroyed()
+    {
+        StartCoroutine(DelayedGameEnded()); 
+    }
+    IEnumerator DelayedGameEnded()
+    {
+        yield return null;
+        if(!isAllHeartDestroyed)
+        {
+            GameEnded?.Invoke(true, player.HeartCount);
+           // AudioManager.instance.PlaySound(SoundId.GameEnd); 
+        }
+    }
+
 }

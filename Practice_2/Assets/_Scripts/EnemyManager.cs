@@ -48,9 +48,9 @@ public class EnemyManager : MonoBehaviour
         {
             if(waveEnemyCount <= currentEnemyCount)
             {
+                currentWave++;
                 yield return new WaitForSeconds(waveInterval);
                 currentEnemyCount = 0;
-                currentWave++;
                 if(currentWave >= maxWave)
                     break;
                 SpawnEnemy();
@@ -78,11 +78,19 @@ public class EnemyManager : MonoBehaviour
     {
         Debug.Assert(this.unitGenerator != null, "enemy factory is null!");
         Debug.Assert(this.player != null, "player is null!");
-        Unit unit;
-        if(currentWave==0)
-            unit = unitGenerator.GetUnit("Enemy_A");
-        else
-            unit = unitGenerator.GetUnit("Enemy_B");
+        Unit unit = null;
+        switch(currentWave)
+        {
+            case 0:
+                unit = unitGenerator.GetUnit("Enemy_A");
+                break;
+            case 1:
+                unit = unitGenerator.GetUnit("Enemy_B");
+                break;
+            case 2:
+                unit = unitGenerator.GetUnit("Enemy_C");
+                break;
+        }
         unit.Activate(GetEnemySpawnPosition(), player.GetPosition);
 
         unit.Destroyed += this.OnEnemyDestroyed;
@@ -95,6 +103,7 @@ public class EnemyManager : MonoBehaviour
         int index = enemies.IndexOf(unit);
         enemies.RemoveAt(index); 
         unitGenerator.Restore(unit, unit.name);
+        EnemyDestroyed?.Invoke();
         if (currentWave == maxWave && enemies.Count == 0)
         {
             AllEnemyDestroyed?.Invoke();
@@ -118,4 +127,15 @@ public class EnemyManager : MonoBehaviour
         enemies[index].Attacked(damage);
     }
 
+
+    public void OnGameEnded(bool isVictory, int HeartCount)
+    {
+        if(enemies.Count == 0)
+            return;
+        
+        foreach(var unit in enemies)
+        {
+            unitGenerator.Restore(unit, unit.name);
+        }
+    }
 }

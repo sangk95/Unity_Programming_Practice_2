@@ -9,6 +9,7 @@ public class PlayerController : MonoBehaviour
     Bullet bulletPrefab;
     [SerializeField]
     int bulletDamage = 1;
+    int heart=3;
     float firedelay = 0.5f;
     float elapsedFireTime;
     bool canShoot = true; 
@@ -18,8 +19,10 @@ public class PlayerController : MonoBehaviour
     Factory bulletFactory;
     public Action FindEnemy;
     public Action<int, Unit> HitEnemy;
+    public Action AllHeartDestroyed;
 
     public Vector3 GetPosition{get{return this.transform.position;}}
+    public int HeartCount => heart;
     void Awake()
     {
         body = GetComponent<Rigidbody2D>();
@@ -30,6 +33,15 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         bulletFactory = new Factory(bulletPrefab);
+    }
+    void OnTriggerEnter2D(Collider2D other) 
+    {
+        if(other.CompareTag("Enemy"))
+        {
+            heart--;
+            if(heart == 0)
+                AllHeartDestroyed?.Invoke();
+        }
     }
     public void Gamestart()
     {
@@ -74,6 +86,10 @@ public class PlayerController : MonoBehaviour
         HitEnemy?.Invoke(bulletDamage, unit);
         usedBullet.Destroyed -= this.BulletDestroy;
         bulletFactory.Restore(usedBullet);
+    }
+    public void OnGameEnded(bool isVictory, int HeartCount) 
+    { 
+        isGameStarted = false; 
     }
     void Update()
     {
