@@ -843,7 +843,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00fe0788f75bd34429b1d6b2aafab9ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 0.5
+  speed: 1
   sprites:
   - {fileID: 1406004758}
   - {fileID: 1722041172}
@@ -1080,7 +1080,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scorePerEnemy: 10
   scorePerHeart: 100
-  backGround: []
   unitPrefab:
   - {fileID: 5039146375007334216, guid: 19451a6dd86a9dd43b0e10956d439b3d, type: 3}
   - {fileID: 5320642867037063478, guid: a5af7ebc1e8b07349afc08ed411a7a19, type: 3}
@@ -1091,6 +1090,10 @@ MonoBehaviour:
   playerPosition: {fileID: 1547348560}
   playerPrefab: {fileID: 2329165864308159304, guid: 40e11150833c2a8498188a9198d12709, type: 3}
   uIRoot: {fileID: 1155783832}
+  backGround:
+  - {fileID: 1979627086}
+  - {fileID: 897056270}
+  - {fileID: 1978298361}
 --- !u!4 &1155865968
 Transform:
   m_ObjectHideFlags: 0
@@ -1555,7 +1558,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00fe0788f75bd34429b1d6b2aafab9ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 0.25
+  speed: 0.5
   sprites:
   - {fileID: 2042825854}
   - {fileID: 1704003511}
@@ -1607,7 +1610,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00fe0788f75bd34429b1d6b2aafab9ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 1
+  speed: 2
   sprites:
   - {fileID: 339737707}
   - {fileID: 1264370537}

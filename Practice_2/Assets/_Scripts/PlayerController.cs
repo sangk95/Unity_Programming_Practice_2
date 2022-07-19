@@ -20,6 +20,7 @@ public class PlayerController : MonoBehaviour
     public Action FindEnemy;
     public Action<int, Unit> HitEnemy;
     public Action AllHeartDestroyed;
+    public Action StopMoved;
 
     public Vector3 GetPosition{get{return this.transform.position;}}
     public int HeartCount => heart;
@@ -63,6 +64,7 @@ public class PlayerController : MonoBehaviour
     }
     void Fire()
     {
+        StopMoved?.Invoke();
         RecycleObject bullet = bulletFactory.Get();
         Vector3 startPosition = this.transform.position + new Vector3(0, 0.4f, 0);
         bullet.Activate(startPosition);
@@ -74,9 +76,9 @@ public class PlayerController : MonoBehaviour
         while(Math.Abs(this.transform.position.x-position.x) > 0.1f)
         {
             if(this.transform.position.x > position.x)
-                this.transform.position += Vector3.left*0.05f;
+                this.transform.position += Vector3.left*0.01f;
             else
-                this.transform.position += Vector3.right*0.05f;
+                this.transform.position += Vector3.right*0.01f;
             yield return null;
         }
         Fire();

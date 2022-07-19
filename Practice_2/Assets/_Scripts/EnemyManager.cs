@@ -16,6 +16,7 @@ public class EnemyManager : MonoBehaviour
     public Action EnemyDestroyed;
     public Action AllEnemyDestroyed; 
     public Action NextStage;
+    public Action<bool> MovingToNextWave;
     List<Unit> enemies = new List<Unit>();
 
     /*  --FireController-- It's not nearest
@@ -41,28 +42,36 @@ public class EnemyManager : MonoBehaviour
     {
         currentEnemyCount = 0;
         StartCoroutine(AutoSpawnEnemy());
+        MovingToNextWave?.Invoke(false);
     }
     IEnumerator AutoSpawnEnemy()
     {
         while(true) 
         {
-            if(waveEnemyCount <= currentEnemyCount)
+            if(currentEnemyCount >= waveEnemyCount && enemies.Count == 0)
             {
                 currentWave++;
-                yield return new WaitForSeconds(waveInterval);
-                currentEnemyCount = 0;
                 if(currentWave >= maxWave)
-                    break;
+                    yield break;
+                MovingToNextWave?.Invoke(true);
+                yield return new WaitForSeconds(waveInterval);
+                MovingToNextWave?.Invoke(false);
+                currentEnemyCount = 0;
+            }
+            else if(currentEnemyCount < waveEnemyCount)
+                yield return new WaitForSeconds(enemySpawnInterval); 
+            else
+                yield return null;
+            if(currentEnemyCount == 0 && currentWave != 0)
+            {
                 SpawnEnemy();
                 NextStage?.Invoke();
             }
-            else
-                yield return new WaitForSeconds(enemySpawnInterval); 
-
-            SpawnEnemy();
+            else if(currentEnemyCount < waveEnemyCount)
+                SpawnEnemy();
         }
     }
-    public void resetActivate(Vector3 position)
+    public void resetActivate()
     {
         StartCoroutine(Reset());
     }
@@ -104,7 +113,7 @@ public class EnemyManager : MonoBehaviour
         enemies.RemoveAt(index); 
         unitGenerator.Restore(unit, unit.name);
         EnemyDestroyed?.Invoke();
-        if (currentWave == maxWave && enemies.Count == 0)
+        if (currentWave == maxWave-1 && enemies.Count == 0)
         {
             AllEnemyDestroyed?.Invoke();
         }

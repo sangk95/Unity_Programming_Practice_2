@@ -31,9 +31,11 @@ public class Objects : MonoBehaviour
     IEnumerator slerpRotation(Vector3 dir)
     {
         Quaternion targetRotation = Quaternion.LookRotation(transform.forward, dir);
-        while(Quaternion.Euler(transform.rotation.eulerAngles) != targetRotation)
+        while(true)
         {
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime*2);
+            if(transform.rotation == targetRotation)
+                yield break;
             yield return null;
         }
     }

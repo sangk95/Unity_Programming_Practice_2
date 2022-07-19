@@ -9,8 +9,6 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     int scorePerHeart = 100;
     [SerializeField]
-    Transform[] backGround;
-    [SerializeField]
     Unit[] unitPrefab;
     [SerializeField]
     int maxWave = 2;
@@ -26,6 +24,8 @@ public class GameManager : MonoBehaviour
     PlayerController playerPrefab;
     [SerializeField]
     UIRoot uIRoot;
+    [SerializeField]
+    BackGround[] backGround;
     
     public Action<bool, int> GameEnded;
     bool isAllHeartDestroyed = false;
@@ -35,7 +35,6 @@ public class GameManager : MonoBehaviour
     EnemyManager enemyManager;
     TimeManager timeManager;
     ScoreManager scoreManager;
-    // Start is called before the first frame update
     void Start()
     {
         player = Instantiate(playerPrefab);
@@ -54,11 +53,15 @@ public class GameManager : MonoBehaviour
         player.FindEnemy += fireController.NearestEnemy;
         player.HitEnemy += enemyManager.Attacked;
         player.AllHeartDestroyed += this.OnAllHeartDestroyed;
+        player.StopMoved += enemyManager.resetActivate;
         fireController.Fire += player.FireReady;
-        fireController.Fire += enemyManager.resetActivate;
         enemyManager.NextStage += fireController.NearestEnemy;
         enemyManager.EnemyDestroyed += scoreManager.OnEnemyDestroyed;
         enemyManager.AllEnemyDestroyed += this.OnAllEnemyDestroyed;
+        foreach(var back in backGround)
+        {
+            enemyManager.MovingToNextWave += back.checkMove;
+        }
         timeManager.GameStarted += player.Gamestart;
         timeManager.GameStarted += enemyManager.Gamestart;
         timeManager.GameStarted += uIRoot.OnGameStarted;
@@ -75,11 +78,15 @@ public class GameManager : MonoBehaviour
         player.FindEnemy -= fireController.NearestEnemy;
         player.HitEnemy -= enemyManager.Attacked;
         player.AllHeartDestroyed -= this.OnAllHeartDestroyed;
+        player.StopMoved -= enemyManager.resetActivate;
         fireController.Fire -= player.FireReady;
-        fireController.Fire -= enemyManager.resetActivate;
         enemyManager.NextStage -= fireController.NearestEnemy;
         enemyManager.EnemyDestroyed -= scoreManager.OnEnemyDestroyed;
         enemyManager.AllEnemyDestroyed -= this.OnAllEnemyDestroyed;
+        foreach(var back in backGround)
+        {
+            enemyManager.MovingToNextWave -= back.checkMove;
+        }
         timeManager.GameStarted -= player.Gamestart;
         timeManager.GameStarted -= enemyManager.Gamestart;
         timeManager.GameStarted -= uIRoot.OnGameStarted;

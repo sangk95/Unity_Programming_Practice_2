@@ -11,14 +11,21 @@ public class BackGround : MonoBehaviour
     float viewHeight;
     [SerializeField]
     Transform[] sprites;
+    bool isMoving = true;
     void Awake()
     {
         viewHeight = Camera.main.orthographicSize * 2;
     }
 
+    public void checkMove(bool check)
+    {
+        isMoving = check;
+    }
     // Update is called once per frame
     void Update()
     {
+        if(!isMoving)
+            return;
         Vector3 curPosition = transform.position;
         Vector3 nextPosition = Vector3.down * speed * Time.deltaTime;
         transform.position = curPosition + nextPosition;
