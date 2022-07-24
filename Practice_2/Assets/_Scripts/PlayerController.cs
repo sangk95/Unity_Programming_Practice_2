@@ -76,9 +76,9 @@ public class PlayerController : MonoBehaviour
         while(Math.Abs(this.transform.position.x-position.x) > 0.1f)
         {
             if(this.transform.position.x > position.x)
-                this.transform.position += Vector3.left*0.01f;
+                this.transform.position += Vector3.left*0.02f;
             else
-                this.transform.position += Vector3.right*0.01f;
+                this.transform.position += Vector3.right*0.02f;
             yield return null;
         }
         Fire();

@@ -58,6 +58,7 @@ public class GameManager : MonoBehaviour
         enemyManager.NextStage += fireController.NearestEnemy;
         enemyManager.EnemyDestroyed += scoreManager.OnEnemyDestroyed;
         enemyManager.AllEnemyDestroyed += this.OnAllEnemyDestroyed;
+        enemyManager.WaveStarted += uIRoot.OnWaveChanged;
         foreach(var back in backGround)
         {
             enemyManager.MovingToNextWave += back.checkMove;
@@ -83,6 +84,7 @@ public class GameManager : MonoBehaviour
         enemyManager.NextStage -= fireController.NearestEnemy;
         enemyManager.EnemyDestroyed -= scoreManager.OnEnemyDestroyed;
         enemyManager.AllEnemyDestroyed -= this.OnAllEnemyDestroyed;
+        enemyManager.WaveStarted -= uIRoot.OnWaveChanged;
         foreach(var back in backGround)
         {
             enemyManager.MovingToNextWave -= back.checkMove;

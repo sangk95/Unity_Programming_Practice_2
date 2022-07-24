@@ -17,6 +17,7 @@ public class EnemyManager : MonoBehaviour
     public Action AllEnemyDestroyed; 
     public Action NextStage;
     public Action<bool> MovingToNextWave;
+    public Action<int> WaveStarted;
     List<Unit> enemies = new List<Unit>();
 
     /*  --FireController-- It's not nearest
@@ -43,6 +44,7 @@ public class EnemyManager : MonoBehaviour
         currentEnemyCount = 0;
         StartCoroutine(AutoSpawnEnemy());
         MovingToNextWave?.Invoke(false);
+        WaveStarted?.Invoke(currentWave+1);
     }
     IEnumerator AutoSpawnEnemy()
     {
@@ -56,6 +58,7 @@ public class EnemyManager : MonoBehaviour
                 MovingToNextWave?.Invoke(true);
                 yield return new WaitForSeconds(waveInterval);
                 MovingToNextWave?.Invoke(false);
+                WaveStarted?.Invoke(currentWave+1);
                 currentEnemyCount = 0;
             }
             else if(currentEnemyCount < waveEnemyCount)

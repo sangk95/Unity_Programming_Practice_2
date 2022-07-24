@@ -9,10 +9,13 @@ public class UIRoot : MonoBehaviour
     TMP_Text scoreUI; 
     [SerializeField]
     TMP_Text resultUI;
+    [SerializeField]
+    TMP_Text waveUI;
     void Start()
     {
         scoreUI.gameObject.SetActive(false);
         resultUI.gameObject.SetActive(false);
+        waveUI.gameObject.SetActive(false);
     }
 
     public void OnGameStarted()
@@ -32,4 +35,16 @@ public class UIRoot : MonoBehaviour
         scoreUI.text = string.Format("Score: {0}", score);
     }
 
+    public void OnWaveChanged(int curWave)
+    {
+        waveUI.gameObject.SetActive(true);
+        waveUI.text = string.Format("Wave {0}", curWave);
+        StartCoroutine(Delay());
+    }
+
+    IEnumerator Delay()
+    {
+        yield return new WaitForSeconds(1.5f);
+        waveUI.gameObject.SetActive(false);
+    }
 }
