@@ -69,6 +69,7 @@ public class PlayerController : MonoBehaviour
         Vector3 startPosition = this.transform.position + new Vector3(0, 0.4f, 0);
         bullet.Activate(startPosition);
         bullet.Destroyed += this.BulletDestroy;
+        AudioManager.instance.PlaySound(SoundId.Shoot);
         canShoot = false;
     }
     IEnumerator SetFirePosition(Vector3 position)
@@ -88,6 +89,7 @@ public class PlayerController : MonoBehaviour
         HitEnemy?.Invoke(bulletDamage, unit);
         usedBullet.Destroyed -= this.BulletDestroy;
         bulletFactory.Restore(usedBullet);
+        AudioManager.instance.PlaySound(SoundId.BulletExplosion);
     }
     public void OnGameEnded(bool isVictory, int HeartCount) 
     { 

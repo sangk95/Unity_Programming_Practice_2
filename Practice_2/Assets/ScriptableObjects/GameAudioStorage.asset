@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d30a536771f00c4cb7f1640c01bd341, type: 3}
+  m_Name: GameAudioStorage
+  m_EditorClassIdentifier: 
+  soundSrcs:
+  - soundFile: {fileID: 8300000, guid: 19f89c6e740e7447f9e12a8310d3e973, type: 3}
+    soundId: 0
+  - soundFile: {fileID: 8300000, guid: b99da9a57308d4ba1bee1cf1d9038376, type: 3}
+    soundId: 1
+  - soundFile: {fileID: 8300000, guid: 0c008ee3ee72a4362a35be25fa5de043, type: 3}
+    soundId: 2
+  - soundFile: {fileID: 8300000, guid: b9eff218e132a4e76be78840eca96fb2, type: 3}
+    soundId: 3

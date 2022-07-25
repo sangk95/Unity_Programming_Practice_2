@@ -109,7 +109,7 @@ public class GameManager : MonoBehaviour
     {
         isAllHeartDestroyed = true;
         GameEnded?.Invoke(false, player.HeartCount);
-       // AudioManager.instance.PlaySound(SoundId.GameEnd); 
+        AudioManager.instance.PlaySound(SoundId.GameEnd); 
     }
     void OnAllEnemyDestroyed()
     {
@@ -121,7 +121,7 @@ public class GameManager : MonoBehaviour
         if(!isAllHeartDestroyed)
         {
             GameEnded?.Invoke(true, player.HeartCount);
-           // AudioManager.instance.PlaySound(SoundId.GameEnd); 
+            AudioManager.instance.PlaySound(SoundId.GameEnd); 
         }
     }
 
