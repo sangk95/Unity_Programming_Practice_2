@@ -1,2 +1,2 @@
 # Unity_Programming_Practice_2
-delegate, singleton, scriptable obj, factory
+Delegate, Singleton, Scriptable Object, Factory Method Pattern, Corutine, Object Pooling, FSM, Dependency Injection
