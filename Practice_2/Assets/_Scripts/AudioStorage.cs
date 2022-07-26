@@ -40,5 +40,5 @@ public struct SoundSrc
 }
 public enum SoundId
 {
-    Shoot, BulletExplosion, AttackedByEnemy, GameEnd
+    Shoot, SwordExplosion, AttackedByEnemy, GameEnd
 } 

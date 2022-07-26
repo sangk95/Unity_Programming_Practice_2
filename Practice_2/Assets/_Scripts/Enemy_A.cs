@@ -8,10 +8,7 @@ public class Enemy_A :  Unit
     {
         moveSpeed = 2f;
         Hp = 1;
-    }
-    public override void Attack()
-    {
-        Debug.Log("Attack");
+        ATKDamage = 1;
     }
     public override void DestroySelf()
     {

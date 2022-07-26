@@ -7,7 +7,7 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     int scorePerEnemy = 10;
     [SerializeField]
-    int scorePerHeart = 100;
+    int scorePerHP = 100;
     [SerializeField]
     Unit[] unitPrefab;
     [SerializeField]
@@ -28,7 +28,7 @@ public class GameManager : MonoBehaviour
     BackGround[] backGround;
     
     public Action<bool, int> GameEnded;
-    bool isAllHeartDestroyed = false;
+    bool isAllHPDestroyed = false;
 
     PlayerController player;
     FireController fireController;
@@ -43,7 +43,7 @@ public class GameManager : MonoBehaviour
         enemyManager = gameObject.AddComponent<EnemyManager>();
         enemyManager.Initialize(new UnitGenerator(unitPrefab), player, maxWave, waveEnemyCount, waveInterval, enemySpawnInterval);
         fireController = new FireController(enemyManager, player);
-        scoreManager = new ScoreManager(scorePerEnemy, scorePerHeart);
+        scoreManager = new ScoreManager(scorePerEnemy, scorePerHP);
 
         BindEvents();
         timeManager.StartGame();
@@ -51,14 +51,17 @@ public class GameManager : MonoBehaviour
     void BindEvents()
     {
         player.FindEnemy += fireController.NearestEnemy;
-        player.HitEnemy += enemyManager.Attacked;
-        player.AllHeartDestroyed += this.OnAllHeartDestroyed;
+        player.AllHPDestroyed += this.OnAllHPDestroyed;
         player.StopMoved += enemyManager.resetActivate;
-        fireController.Fire += player.FireReady;
+
+        //fireController.Fire += player.FireReady;
         enemyManager.NextStage += fireController.NearestEnemy;
         enemyManager.EnemyDestroyed += scoreManager.OnEnemyDestroyed;
         enemyManager.AllEnemyDestroyed += this.OnAllEnemyDestroyed;
         enemyManager.WaveStarted += uIRoot.OnWaveChanged;
+        enemyManager.WaveEnd += player.SetPosition;
+
+        enemyManager.AttackPlayer += player.Attacked;
         foreach(var back in backGround)
         {
             enemyManager.MovingToNextWave += back.checkMove;
@@ -77,14 +80,15 @@ public class GameManager : MonoBehaviour
     void UnBindEvents()
     {
         player.FindEnemy -= fireController.NearestEnemy;
-        player.HitEnemy -= enemyManager.Attacked;
-        player.AllHeartDestroyed -= this.OnAllHeartDestroyed;
+        player.AllHPDestroyed -= this.OnAllHPDestroyed;
         player.StopMoved -= enemyManager.resetActivate;
-        fireController.Fire -= player.FireReady;
+        //fireController.Fire -= player.FireReady;
         enemyManager.NextStage -= fireController.NearestEnemy;
         enemyManager.EnemyDestroyed -= scoreManager.OnEnemyDestroyed;
         enemyManager.AllEnemyDestroyed -= this.OnAllEnemyDestroyed;
         enemyManager.WaveStarted -= uIRoot.OnWaveChanged;
+        enemyManager.WaveEnd -= player.SetPosition;
+        enemyManager.AttackPlayer -= player.Attacked;
         foreach(var back in backGround)
         {
             enemyManager.MovingToNextWave -= back.checkMove;
@@ -105,10 +109,10 @@ public class GameManager : MonoBehaviour
         UnBindEvents();   
     }
 
-    void OnAllHeartDestroyed()
+    void OnAllHPDestroyed()
     {
-        isAllHeartDestroyed = true;
-        GameEnded?.Invoke(false, player.HeartCount);
+        isAllHPDestroyed = true;
+        GameEnded?.Invoke(false, player.HPCount);
         AudioManager.instance.PlaySound(SoundId.GameEnd); 
     }
     void OnAllEnemyDestroyed()
@@ -118,9 +122,9 @@ public class GameManager : MonoBehaviour
     IEnumerator DelayedGameEnded()
     {
         yield return null;
-        if(!isAllHeartDestroyed)
+        if(!isAllHPDestroyed)
         {
-            GameEnded?.Invoke(true, player.HeartCount);
+            GameEnded?.Invoke(true, player.HPCount);
             AudioManager.instance.PlaySound(SoundId.GameEnd); 
         }
     }

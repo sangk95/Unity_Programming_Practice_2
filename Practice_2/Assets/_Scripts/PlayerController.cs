@@ -2,28 +2,30 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Linq;
 [RequireComponent(typeof(BoxCollider2D), typeof(Rigidbody2D))]
 public class PlayerController : MonoBehaviour
 {
     [SerializeField]
-    Bullet bulletPrefab;
+    Sword swordPrefab;
     [SerializeField]
-    int bulletDamage = 1;
-    int heart=3;
+    int swordDamage = 1;
+    int hp=50;
+    float moveSpeed = 0.1f;
     float firedelay = 0.5f;
     float elapsedFireTime;
     bool canShoot = true; 
     bool isGameStarted = false;
     Rigidbody2D body;
     BoxCollider2D box;
-    Factory bulletFactory;
+    Factory swordFactory;
     public Action FindEnemy;
-    public Action<int, Unit> HitEnemy;
-    public Action AllHeartDestroyed;
+    public Action AllHPDestroyed;
     public Action StopMoved;
 
     public Vector3 GetPosition{get{return this.transform.position;}}
-    public int HeartCount => heart;
+    public int HPCount => hp;
+    public int GetSwordDamage => swordDamage;
     void Awake()
     {
         body = GetComponent<Rigidbody2D>();
@@ -33,16 +35,7 @@ public class PlayerController : MonoBehaviour
     }
     void Start()
     {
-        bulletFactory = new Factory(bulletPrefab);
-    }
-    void OnTriggerEnter2D(Collider2D other) 
-    {
-        if(other.CompareTag("Enemy"))
-        {
-            heart--;
-            if(heart == 0)
-                AllHeartDestroyed?.Invoke();
-        }
+        swordFactory = new Factory(swordPrefab);
     }
     public void Gamestart()
     {
@@ -53,7 +46,7 @@ public class PlayerController : MonoBehaviour
     {
         yield return new WaitForSeconds(0.6f);
         FindEnemy?.Invoke();
-    }
+    }/*
     public void FireReady(Vector3 position)
     {
         if(!isGameStarted)
@@ -61,37 +54,50 @@ public class PlayerController : MonoBehaviour
         if(!canShoot)
             return;
         StartCoroutine(SetFirePosition(position));
-    }
+    }*/
     void Fire()
     {
         StopMoved?.Invoke();
-        RecycleObject bullet = bulletFactory.Get();
-        Vector3 startPosition = this.transform.position + new Vector3(0, 0.4f, 0);
-        bullet.Activate(startPosition);
-        bullet.Destroyed += this.BulletDestroy;
+        RecycleObject sword = swordFactory.Get();
+        Vector3 startPosition = this.transform.position + this.transform.up*0.6f;
+        sword.Activate(startPosition);
+        sword.Destroyed += this.SwordDestroy;
         AudioManager.instance.PlaySound(SoundId.Shoot);
         canShoot = false;
-    }
+    }/*
     IEnumerator SetFirePosition(Vector3 position)
     {
-        while(Math.Abs(this.transform.position.x-position.x) > 0.1f)
+        while(Vector3.Distance(this.transform.position, position) > 0.1f)
         {
-            if(this.transform.position.x > position.x)
-                this.transform.position += Vector3.left*0.02f;
-            else
-                this.transform.position += Vector3.right*0.02f;
+            this.transform.position = Vector3.MoveTowards(this.transform.position, position,moveSpeed*Time.deltaTime);
             yield return null;
         }
         Fire();
-    }
-    void BulletDestroy(RecycleObject usedBullet, Unit unit)
+    }*/
+    public void SetPosition()
     {
-        HitEnemy?.Invoke(bulletDamage, unit);
-        usedBullet.Destroyed -= this.BulletDestroy;
-        bulletFactory.Restore(usedBullet);
-        AudioManager.instance.PlaySound(SoundId.BulletExplosion);
+        StartCoroutine(SetPosition_());
     }
-    public void OnGameEnded(bool isVictory, int HeartCount) 
+    public IEnumerator SetPosition_()
+    {
+        while(Vector3.Distance(this.transform.position, new Vector3(0,-4,0)) > 0.1f)
+        {
+            this.transform.position = Vector3.MoveTowards(this.transform.position, new Vector3(0,-4,0),Time.deltaTime*2);
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(new Vector3(0,0,0)), Time.deltaTime*2);
+            yield return null;
+        }
+    }
+    void SwordDestroy(RecycleObject usedSword)
+    {
+        usedSword.Destroyed -= this.SwordDestroy;
+        swordFactory.Restore(usedSword);
+        AudioManager.instance.PlaySound(SoundId.SwordExplosion);
+    }
+    public void Attacked(int damage)
+    {
+        hp-=damage;
+    }
+    public void OnGameEnded(bool isVictory, int HPCount) 
     { 
         isGameStarted = false; 
     }
@@ -99,15 +105,33 @@ public class PlayerController : MonoBehaviour
     {
         if(!isGameStarted)
             return;
+        var objects = GameObject.FindGameObjectsWithTag("Enemy").ToList();
+        var neareastObject = objects.OrderBy(obj => {return Vector3.Distance(this.transform.position, obj.transform.position);}).FirstOrDefault();
+        if(neareastObject == null)
+            return;
         if(!canShoot)
         {
             elapsedFireTime += Time.deltaTime;
             if(elapsedFireTime > firedelay)
             {
                 canShoot = true;
-                FindEnemy?.Invoke();
+                //FindEnemy?.Invoke();  -> // setfireposition() & fireready()
                 elapsedFireTime = 0f;
             }
         }
+        else
+        {
+            
+            if(Vector3.Distance(this.transform.position, neareastObject.transform.position) < 1f)
+            {
+                Fire();
+                canShoot = false;
+            }
+                
+        }
+        Vector3 dir = (neareastObject.transform.position - transform.position).normalized;
+        this.transform.rotation = Quaternion.LookRotation(transform.forward, dir);
+        if(Vector3.Distance(this.transform.position, neareastObject.transform.position) > 1f)
+        this.transform.position = Vector3.MoveTowards(this.transform.position, neareastObject.transform.position, moveSpeed*0.1f);
     }
 }

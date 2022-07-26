@@ -16,8 +16,10 @@ public class EnemyManager : MonoBehaviour
     public Action EnemyDestroyed;
     public Action AllEnemyDestroyed; 
     public Action NextStage;
+    public Action WaveEnd;
     public Action<bool> MovingToNextWave;
     public Action<int> WaveStarted;
+    public Action<int> AttackPlayer;
     List<Unit> enemies = new List<Unit>();
 
     /*  --FireController-- It's not nearest
@@ -52,6 +54,7 @@ public class EnemyManager : MonoBehaviour
         {
             if(currentEnemyCount >= waveEnemyCount && enemies.Count == 0)
             {
+                WaveEnd?.Invoke();
                 currentWave++;
                 if(currentWave >= maxWave)
                     yield break;
@@ -106,12 +109,25 @@ public class EnemyManager : MonoBehaviour
         unit.Activate(GetEnemySpawnPosition(), player.GetPosition);
 
         unit.Destroyed += this.OnEnemyDestroyed;
+        unit.AttackedBySword += this.OnEnemyAttacked;
+        unit.AttackPlayer += this.OnAttackPlayer;
         enemies.Add(unit);
         currentEnemyCount++;
+    }
+    void OnEnemyAttacked(Unit unit)
+    {
+        int index = enemies.IndexOf(unit);
+        enemies[index].Attacked(player.GetSwordDamage);
+    }
+    void OnAttackPlayer(int damage)
+    {
+        AttackPlayer?.Invoke(damage);
     }
     void OnEnemyDestroyed(Unit unit) 
     {
         unit.Destroyed -= this.OnEnemyDestroyed;
+        unit.AttackedBySword -= this.OnEnemyAttacked;
+        unit.AttackPlayer -= this.OnAttackPlayer;
         int index = enemies.IndexOf(unit);
         enemies.RemoveAt(index); 
         unitGenerator.Restore(unit, unit.name);
@@ -132,13 +148,6 @@ public class EnemyManager : MonoBehaviour
         spawnPosition.z = 0f;
         return spawnPosition;
     }
-
-    public void Attacked(int damage, Unit unit)
-    {
-        int index = enemies.IndexOf(unit);
-        enemies[index].Attacked(damage);
-    }
-
 
     public void OnGameEnded(bool isVictory, int HeartCount)
     {
