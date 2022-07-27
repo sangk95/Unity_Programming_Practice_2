@@ -50,9 +50,9 @@ public class GameManager : MonoBehaviour
     }
     void BindEvents()
     {
-        player.FindEnemy += fireController.NearestEnemy;
         player.AllHPDestroyed += this.OnAllHPDestroyed;
         player.StopMoved += enemyManager.resetActivate;
+        player.PlayerAttacked += uIRoot.OnPlayerHPChanged;
 
         //fireController.Fire += player.FireReady;
         enemyManager.NextStage += fireController.NearestEnemy;
@@ -70,6 +70,7 @@ public class GameManager : MonoBehaviour
         timeManager.GameStarted += enemyManager.Gamestart;
         timeManager.GameStarted += uIRoot.OnGameStarted;
         scoreManager.ScoreChanged += uIRoot.OnScoreChanged;
+        uIRoot.ChangedPlayMode += player.PlayModeChange;
 
         this.GameEnded += player.OnGameEnded;
         this.GameEnded += enemyManager.OnGameEnded;
@@ -79,9 +80,10 @@ public class GameManager : MonoBehaviour
 
     void UnBindEvents()
     {
-        player.FindEnemy -= fireController.NearestEnemy;
         player.AllHPDestroyed -= this.OnAllHPDestroyed;
         player.StopMoved -= enemyManager.resetActivate;
+        player.PlayerAttacked -= uIRoot.OnPlayerHPChanged;
+
         //fireController.Fire -= player.FireReady;
         enemyManager.NextStage -= fireController.NearestEnemy;
         enemyManager.EnemyDestroyed -= scoreManager.OnEnemyDestroyed;
@@ -97,6 +99,7 @@ public class GameManager : MonoBehaviour
         timeManager.GameStarted -= enemyManager.Gamestart;
         timeManager.GameStarted -= uIRoot.OnGameStarted;
         scoreManager.ScoreChanged -= uIRoot.OnScoreChanged;
+        uIRoot.ChangedPlayMode -= player.PlayModeChange;
         
         this.GameEnded -= player.OnGameEnded;
         this.GameEnded -= enemyManager.OnGameEnded;

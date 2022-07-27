@@ -68,6 +68,8 @@ public class Unit : MonoBehaviour
         Hp -= damage;
         if(Hp <= 0)
             DestroySelf();
+        else
+            StartCoroutine(KnockBack());
     }
     public virtual void DestroySelf()
     {
@@ -80,7 +82,16 @@ public class Unit : MonoBehaviour
         Vector3 dir = (targetPosition - transform.position).normalized;
         StartCoroutine(slerpRotation(dir));
     }
-
+    IEnumerator KnockBack()
+    {   
+        float elapsedTime=0f;
+        while(elapsedTime < 0.1f)
+        {
+            this.transform.Translate(this.transform.up * 5 * Time.deltaTime);
+            elapsedTime+=Time.deltaTime;
+            yield return null;
+        }
+    }
     IEnumerator slerpRotation(Vector3 dir)
     {
         Quaternion targetRotation = Quaternion.LookRotation(transform.forward, dir);

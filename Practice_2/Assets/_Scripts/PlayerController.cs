@@ -6,12 +6,14 @@ using System.Linq;
 [RequireComponent(typeof(BoxCollider2D), typeof(Rigidbody2D))]
 public class PlayerController : MonoBehaviour
 {
+    public enum PlayMode{Manual, Automatic}
+    PlayMode playmode;
     [SerializeField]
     Sword swordPrefab;
     [SerializeField]
     int swordDamage = 1;
     int hp=50;
-    float moveSpeed = 0.1f;
+    float moveSpeed = 0.01f;
     float firedelay = 0.5f;
     float elapsedFireTime;
     bool canShoot = true; 
@@ -22,12 +24,14 @@ public class PlayerController : MonoBehaviour
     public Action FindEnemy;
     public Action AllHPDestroyed;
     public Action StopMoved;
+    public Action<int> PlayerAttacked;
 
     public Vector3 GetPosition{get{return this.transform.position;}}
     public int HPCount => hp;
     public int GetSwordDamage => swordDamage;
     void Awake()
     {
+        playmode = PlayMode.Manual;
         body = GetComponent<Rigidbody2D>();
         box = GetComponent<BoxCollider2D>();
         body.bodyType = RigidbodyType2D.Kinematic;
@@ -60,7 +64,7 @@ public class PlayerController : MonoBehaviour
         StopMoved?.Invoke();
         RecycleObject sword = swordFactory.Get();
         Vector3 startPosition = this.transform.position + this.transform.up*0.6f;
-        sword.Activate(startPosition);
+        sword.Activate(startPosition, this.transform.up);
         sword.Destroyed += this.SwordDestroy;
         AudioManager.instance.PlaySound(SoundId.Shoot);
         canShoot = false;
@@ -96,10 +100,47 @@ public class PlayerController : MonoBehaviour
     public void Attacked(int damage)
     {
         hp-=damage;
+        PlayerAttacked?.Invoke(hp);
     }
     public void OnGameEnded(bool isVictory, int HPCount) 
     { 
         isGameStarted = false; 
+    }
+    void PlayerMoveAuto(GameObject obj)
+    {
+        Vector3 dir = (obj.transform.position - transform.position).normalized;
+        this.transform.rotation = Quaternion.LookRotation(transform.forward, dir);
+        if(Vector3.Distance(this.transform.position, obj.transform.position) > 1f)
+            this.transform.position = Vector3.MoveTowards(this.transform.position, obj.transform.position, moveSpeed);
+    }
+    void PlayerMoveManual(string keyCode, Vector3 mousePosition)
+    {
+        switch(keyCode)
+        {
+            case "W":
+                this.transform.position += Vector3.up * moveSpeed;
+                break;
+            case "A":
+                this.transform.position += Vector3.left * moveSpeed;
+                break;
+            case "S":
+                this.transform.position += Vector3.down * moveSpeed;
+                break;
+            case "D":
+                this.transform.position += Vector3.right * moveSpeed;
+                break;
+        }
+        Vector3 point = Camera.main.ScreenToWorldPoint(mousePosition);
+        point.z = 0f;
+        Vector3 dir = (point - transform.position).normalized;
+        this.transform.rotation = Quaternion.LookRotation(transform.forward, dir);
+    }
+    public void PlayModeChange()
+    {
+        if(playmode == PlayMode.Manual)
+            playmode = PlayMode.Automatic;
+        else
+            playmode = PlayMode.Manual;
     }
     void Update()
     {
@@ -119,19 +160,34 @@ public class PlayerController : MonoBehaviour
                 elapsedFireTime = 0f;
             }
         }
-        else
+        else if(canShoot && playmode == PlayMode.Automatic)
         {
-            
             if(Vector3.Distance(this.transform.position, neareastObject.transform.position) < 1f)
             {
                 Fire();
                 canShoot = false;
             }
-                
         }
-        Vector3 dir = (neareastObject.transform.position - transform.position).normalized;
-        this.transform.rotation = Quaternion.LookRotation(transform.forward, dir);
-        if(Vector3.Distance(this.transform.position, neareastObject.transform.position) > 1f)
-        this.transform.position = Vector3.MoveTowards(this.transform.position, neareastObject.transform.position, moveSpeed*0.1f);
+        else if(canShoot && playmode == PlayMode.Manual)
+        {
+            if(Input.GetMouseButtonDown(0))
+                Fire();
+        }
+        
+        if(playmode == PlayMode.Automatic)
+            PlayerMoveAuto(neareastObject);
+        else if(playmode == PlayMode.Manual)
+        {
+            if(!Input.anyKey)
+                PlayerMoveManual("", Input.mousePosition);
+            if(Input.GetKey(KeyCode.W))
+                PlayerMoveManual("W", Input.mousePosition);
+            else if(Input.GetKey(KeyCode.A))
+                PlayerMoveManual("A", Input.mousePosition);
+            else if(Input.GetKey(KeyCode.S))
+                PlayerMoveManual("S", Input.mousePosition);
+            else if(Input.GetKey(KeyCode.D))
+                PlayerMoveManual("D", Input.mousePosition);
+        }
     }
 }
