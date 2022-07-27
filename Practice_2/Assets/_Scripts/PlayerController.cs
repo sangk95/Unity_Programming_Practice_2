@@ -11,19 +11,26 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     Sword swordPrefab;
     [SerializeField]
+    Sword skillPrefab;
+    [SerializeField]
     int swordDamage = 1;
     int hp=50;
     float moveSpeed = 0.01f;
     float firedelay = 0.5f;
+    float skilldelay = 3.0f;
     float elapsedFireTime;
+    float elapsedSkillTime;
     bool canShoot = true; 
+    bool canSkill = true;
     bool isGameStarted = false;
     Rigidbody2D body;
     BoxCollider2D box;
     Factory swordFactory;
+    Factory skillFactory;
     public Action FindEnemy;
     public Action AllHPDestroyed;
     public Action StopMoved;
+    public Action SkillUsed;
     public Action<int> PlayerAttacked;
 
     public Vector3 GetPosition{get{return this.transform.position;}}
@@ -40,6 +47,7 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         swordFactory = new Factory(swordPrefab);
+        skillFactory = new Factory(skillPrefab);
     }
     public void Gamestart()
     {
@@ -68,7 +76,18 @@ public class PlayerController : MonoBehaviour
         sword.Destroyed += this.SwordDestroy;
         AudioManager.instance.PlaySound(SoundId.Shoot);
         canShoot = false;
-    }/*
+    }
+    void FireSkill()
+    {
+        StopMoved?.Invoke();
+        RecycleObject skill = skillFactory.Get();
+        Vector3 startPosition = this.transform.position + this.transform.up*0.6f;
+        skill.Activate(startPosition, this.transform.up);
+        skill.Destroyed += this.SkillDestroy;
+        AudioManager.instance.PlaySound(SoundId.Shoot);
+        canSkill = false;
+    }
+    /*
     IEnumerator SetFirePosition(Vector3 position)
     {
         while(Vector3.Distance(this.transform.position, position) > 0.1f)
@@ -95,6 +114,12 @@ public class PlayerController : MonoBehaviour
     {
         usedSword.Destroyed -= this.SwordDestroy;
         swordFactory.Restore(usedSword);
+        AudioManager.instance.PlaySound(SoundId.Shoot);
+    }
+    void SkillDestroy(RecycleObject usedSkill)
+    {
+        usedSkill.Destroyed -= this.SkillDestroy;
+        skillFactory.Restore(usedSkill);
         AudioManager.instance.PlaySound(SoundId.SwordExplosion);
     }
     public void Attacked(int damage)
@@ -150,13 +175,37 @@ public class PlayerController : MonoBehaviour
         var neareastObject = objects.OrderBy(obj => {return Vector3.Distance(this.transform.position, obj.transform.position);}).FirstOrDefault();
         if(neareastObject == null)
             return;
+        if(!canSkill)
+        {
+            elapsedSkillTime += Time.deltaTime;
+            if(elapsedSkillTime > skilldelay)
+            {
+                canSkill = true;
+                elapsedSkillTime = 0f;
+            }
+        }
+        else if(canSkill && playmode == PlayMode.Automatic)
+        {
+            if(Vector3.Distance(this.transform.position, neareastObject.transform.position) < 1.5f)
+            {
+                FireSkill();
+                SkillUsed?.Invoke();
+            }
+        }
+        else if(canSkill && playmode == PlayMode.Manual)
+        {
+            if(Input.GetKeyDown(KeyCode.Space))
+            {
+                FireSkill();
+                SkillUsed?.Invoke();
+            }
+        }
         if(!canShoot)
         {
             elapsedFireTime += Time.deltaTime;
             if(elapsedFireTime > firedelay)
             {
                 canShoot = true;
-                //FindEnemy?.Invoke();  -> // setfireposition() & fireready()
                 elapsedFireTime = 0f;
             }
         }
@@ -165,7 +214,6 @@ public class PlayerController : MonoBehaviour
             if(Vector3.Distance(this.transform.position, neareastObject.transform.position) < 1f)
             {
                 Fire();
-                canShoot = false;
             }
         }
         else if(canShoot && playmode == PlayMode.Manual)

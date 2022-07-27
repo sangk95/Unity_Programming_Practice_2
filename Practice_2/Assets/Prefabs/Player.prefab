@@ -132,6 +132,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   swordPrefab: {fileID: 3346273992888129523, guid: f3da033711dfb8e4ca699d316f39f4b8, type: 3}
+  skillPrefab: {fileID: 3346273992888129523, guid: 6865f00d67abadc4cbd0fde385bb8d46, type: 3}
   swordDamage: 1
 --- !u!50 &5058337146647700045
 Rigidbody2D:

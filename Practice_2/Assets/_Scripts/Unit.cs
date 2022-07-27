@@ -50,6 +50,7 @@ public class Unit : MonoBehaviour
                 return;
             Attack();
             isAttackReady = false;
+            if(Hp > 0)
             StartCoroutine(AttackDelay());
             return;
         }

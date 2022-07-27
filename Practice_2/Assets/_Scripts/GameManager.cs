@@ -53,6 +53,7 @@ public class GameManager : MonoBehaviour
         player.AllHPDestroyed += this.OnAllHPDestroyed;
         player.StopMoved += enemyManager.resetActivate;
         player.PlayerAttacked += uIRoot.OnPlayerHPChanged;
+        player.SkillUsed += uIRoot.SkillCoolCount;
 
         //fireController.Fire += player.FireReady;
         enemyManager.NextStage += fireController.NearestEnemy;
@@ -83,6 +84,7 @@ public class GameManager : MonoBehaviour
         player.AllHPDestroyed -= this.OnAllHPDestroyed;
         player.StopMoved -= enemyManager.resetActivate;
         player.PlayerAttacked -= uIRoot.OnPlayerHPChanged;
+        player.SkillUsed -= uIRoot.SkillCoolCount;
 
         //fireController.Fire -= player.FireReady;
         enemyManager.NextStage -= fireController.NearestEnemy;

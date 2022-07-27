@@ -16,15 +16,41 @@ public class UIRoot : MonoBehaviour
     TMP_Text playerHP_UI;
     [SerializeField]
     TMP_Text playModeUI;
+    [SerializeField]
+    TMP_Text coolTimeCount;
+    [SerializeField]
+    Image skillCoolTimeUI;
+    float skillCoolTime = 4.0f;
     bool isAutoPlayMode = false;
     public Action ChangedPlayMode;
     void Start()
     {
+        skillCoolTimeUI.gameObject.SetActive(false);
+        coolTimeCount.gameObject.SetActive(false);
         scoreUI.gameObject.SetActive(false);
         resultUI.gameObject.SetActive(false);
         waveUI.gameObject.SetActive(false);
         playerHP_UI.gameObject.SetActive(false);
         playModeUI.text = string.Format("non-Auto");
+    }
+    public void SkillCoolCount()
+    {
+        skillCoolTimeUI.gameObject.SetActive(true);
+        coolTimeCount.gameObject.SetActive(true);
+        StartCoroutine(CoolTime());
+    }
+    IEnumerator CoolTime()
+    {
+        while(skillCoolTime > 1.0f)
+        {
+            skillCoolTime -= Time.deltaTime;
+            skillCoolTimeUI.fillAmount = (skillCoolTime/4.0f);
+            coolTimeCount.text = string.Format("{0}", (int)skillCoolTime);
+            yield return null;
+        }
+        skillCoolTimeUI.gameObject.SetActive(false);
+        coolTimeCount.gameObject.SetActive(false);
+        skillCoolTime = 4.0f;
     }
     public void PlayModeChange()
     {
