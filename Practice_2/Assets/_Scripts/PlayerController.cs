@@ -27,6 +27,7 @@ public class PlayerController : MonoBehaviour
     bool isGameStarted = false;
     Rigidbody2D body;
     BoxCollider2D box;
+    GameObject targetObject;
     Factory swordFactory;
     Factory skillFactory;
     public Action FindEnemy;
@@ -181,11 +182,15 @@ public class PlayerController : MonoBehaviour
     {
         if(!isGameStarted)
             return;
-        // 가장 가까운적 탐색 -> LinQ
-        var objects = GameObject.FindGameObjectsWithTag("Enemy").ToList();
-        var neareastObject = objects.OrderBy(obj => {return Vector3.Distance(this.transform.position, obj.transform.position);}).FirstOrDefault();
-        if(neareastObject == null)
-            return;
+        // 가장 가까운적 탐색(LinQ) -> 처치 시 재탐색
+        if(targetObject == null || !targetObject.activeSelf)
+        {
+            var objects = GameObject.FindGameObjectsWithTag("Enemy").ToList();
+            var neareastObject = objects.OrderBy(obj => {return Vector3.Distance(this.transform.position, obj.transform.position);}).FirstOrDefault();
+            if(neareastObject == null)
+                return;
+            targetObject = neareastObject;
+        }
 
         //수동 조작
         if(playmode == PlayMode.Manual)
@@ -224,17 +229,17 @@ public class PlayerController : MonoBehaviour
                     break;
                 
                 case State.MovetoAttack:
-                    PlayerMoveToAttackAuto(neareastObject);
+                    PlayerMoveToAttackAuto(targetObject);
                     break;
                     
                 case State.MovetoAvoid:
-                    PlayerMoveToAvoidAuto(neareastObject);
+                    PlayerMoveToAvoidAuto(targetObject);
                     break;
             }
         }
 
         // 상태 체크
-        if(Vector3.Distance(this.transform.position, neareastObject.transform.position) > 2.0f)
+        if(Vector3.Distance(this.transform.position, targetObject.transform.position) > 2.0f)
             curState = State.MovetoAttack;
         else
         {
@@ -251,7 +256,7 @@ public class PlayerController : MonoBehaviour
             if(elapsedSkillTime > skilldelay)
             {
                 canSkill = true;
-                if(Vector3.Distance(this.transform.position, neareastObject.transform.position) < 2.0f)
+                if(Vector3.Distance(this.transform.position, targetObject.transform.position) < 2.0f)
                     curState = State.CanSkill;
                 else
                     curState = State.MovetoAttack;
@@ -264,7 +269,7 @@ public class PlayerController : MonoBehaviour
             if(elapsedFireTime > firedelay)
             {
                 canShoot = true;
-                if(curState != State.CanSkill && Vector3.Distance(this.transform.position, neareastObject.transform.position) < 2.0f)
+                if(curState != State.CanSkill && Vector3.Distance(this.transform.position, targetObject.transform.position) < 2.0f)
                     curState = State.CanShoot;
                 elapsedFireTime = 0f;
             }

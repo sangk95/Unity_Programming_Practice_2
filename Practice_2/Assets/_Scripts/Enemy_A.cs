@@ -7,7 +7,7 @@ public class Enemy_A :  Unit
     void Start()
     {
         moveSpeed = 2f;
-        Hp = 1;
+        Hp = 2;
         ATKDamage = 1;
     }
     public override void DestroySelf()
