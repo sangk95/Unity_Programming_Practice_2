@@ -7,7 +7,9 @@ using System.Linq;
 public class PlayerController : MonoBehaviour
 {
     public enum PlayMode{Manual, Automatic}
+    enum State{CanShoot, CanSkill, MovetoAttack, MovetoAvoid}
     PlayMode playmode;
+    State curState;
     [SerializeField]
     Sword swordPrefab;
     [SerializeField]
@@ -39,6 +41,7 @@ public class PlayerController : MonoBehaviour
     void Awake()
     {
         playmode = PlayMode.Manual;
+        curState = State.MovetoAttack;
         body = GetComponent<Rigidbody2D>();
         box = GetComponent<BoxCollider2D>();
         body.bodyType = RigidbodyType2D.Kinematic;
@@ -97,11 +100,11 @@ public class PlayerController : MonoBehaviour
         }
         Fire();
     }*/
-    public void SetPosition()
+    public void SetDefaultPosition()
     {
-        StartCoroutine(SetPosition_());
+        StartCoroutine(SetDefaultPosition_());
     }
-    public IEnumerator SetPosition_()
+    public IEnumerator SetDefaultPosition_()
     {
         while(Vector3.Distance(this.transform.position, new Vector3(0,-4,0)) > 0.1f)
         {
@@ -131,12 +134,19 @@ public class PlayerController : MonoBehaviour
     { 
         isGameStarted = false; 
     }
-    void PlayerMoveAuto(GameObject obj)
+    void PlayerMoveToAttackAuto(GameObject obj)
     {
         Vector3 dir = (obj.transform.position - transform.position).normalized;
         this.transform.rotation = Quaternion.LookRotation(transform.forward, dir);
         if(Vector3.Distance(this.transform.position, obj.transform.position) > 1f)
             this.transform.position = Vector3.MoveTowards(this.transform.position, obj.transform.position, moveSpeed);
+    }
+    void PlayerMoveToAvoidAuto(GameObject obj)
+    {
+        Vector3 dir = (obj.transform.position - transform.position).normalized;
+        this.transform.rotation = Quaternion.LookRotation(transform.forward, dir);
+        if(Vector3.Distance(this.transform.position, obj.transform.position) > 1f)
+            this.transform.position = Vector3.MoveTowards(this.transform.position, obj.transform.position*-1, moveSpeed);
     }
     void PlayerMoveManual(string keyCode, Vector3 mousePosition)
     {
@@ -171,60 +181,14 @@ public class PlayerController : MonoBehaviour
     {
         if(!isGameStarted)
             return;
+        // 가장 가까운적 탐색 -> LinQ
         var objects = GameObject.FindGameObjectsWithTag("Enemy").ToList();
         var neareastObject = objects.OrderBy(obj => {return Vector3.Distance(this.transform.position, obj.transform.position);}).FirstOrDefault();
         if(neareastObject == null)
             return;
-        if(!canSkill)
-        {
-            elapsedSkillTime += Time.deltaTime;
-            if(elapsedSkillTime > skilldelay)
-            {
-                canSkill = true;
-                elapsedSkillTime = 0f;
-            }
-        }
-        else if(canSkill && playmode == PlayMode.Automatic)
-        {
-            if(Vector3.Distance(this.transform.position, neareastObject.transform.position) < 1.5f)
-            {
-                FireSkill();
-                SkillUsed?.Invoke();
-            }
-        }
-        else if(canSkill && playmode == PlayMode.Manual)
-        {
-            if(Input.GetKeyDown(KeyCode.Space))
-            {
-                FireSkill();
-                SkillUsed?.Invoke();
-            }
-        }
-        if(!canShoot)
-        {
-            elapsedFireTime += Time.deltaTime;
-            if(elapsedFireTime > firedelay)
-            {
-                canShoot = true;
-                elapsedFireTime = 0f;
-            }
-        }
-        else if(canShoot && playmode == PlayMode.Automatic)
-        {
-            if(Vector3.Distance(this.transform.position, neareastObject.transform.position) < 1f)
-            {
-                Fire();
-            }
-        }
-        else if(canShoot && playmode == PlayMode.Manual)
-        {
-            if(Input.GetMouseButtonDown(0))
-                Fire();
-        }
-        
-        if(playmode == PlayMode.Automatic)
-            PlayerMoveAuto(neareastObject);
-        else if(playmode == PlayMode.Manual)
+
+        //수동 조작
+        if(playmode == PlayMode.Manual)
         {
             if(!Input.anyKey)
                 PlayerMoveManual("", Input.mousePosition);
@@ -236,6 +200,74 @@ public class PlayerController : MonoBehaviour
                 PlayerMoveManual("S", Input.mousePosition);
             else if(Input.GetKey(KeyCode.D))
                 PlayerMoveManual("D", Input.mousePosition);
+            if(canSkill && Input.GetKeyDown(KeyCode.Space))
+            {
+                FireSkill();
+                SkillUsed?.Invoke();
+            }
+            else if(canShoot && Input.GetMouseButtonDown(0))
+                Fire();
         }
+
+        // 자동모드에서 현재 상태에 따른 행동
+        else if(playmode == PlayMode.Automatic)
+        {
+            switch(curState)
+            {
+                case State.CanSkill:
+                    FireSkill();
+                    SkillUsed?.Invoke();
+                    break;
+                
+                case State.CanShoot:
+                    Fire();
+                    break;
+                
+                case State.MovetoAttack:
+                    PlayerMoveToAttackAuto(neareastObject);
+                    break;
+                    
+                case State.MovetoAvoid:
+                    PlayerMoveToAvoidAuto(neareastObject);
+                    break;
+            }
+        }
+
+        // 상태 체크
+        if(Vector3.Distance(this.transform.position, neareastObject.transform.position) > 2.0f)
+            curState = State.MovetoAttack;
+        else
+        {
+            if(canSkill)
+                curState = State.CanSkill;
+            else if(canShoot)
+                curState = State.CanShoot;
+            else if(!canShoot && !canSkill)
+                curState = State.MovetoAvoid;
+        }
+        if(!canSkill)
+        {
+            elapsedSkillTime += Time.deltaTime;
+            if(elapsedSkillTime > skilldelay)
+            {
+                canSkill = true;
+                if(Vector3.Distance(this.transform.position, neareastObject.transform.position) < 2.0f)
+                    curState = State.CanSkill;
+                else
+                    curState = State.MovetoAttack;
+                elapsedSkillTime = 0f;
+            }
+        }
+        if(!canShoot)
+        {
+            elapsedFireTime += Time.deltaTime;
+            if(elapsedFireTime > firedelay)
+            {
+                canShoot = true;
+                if(curState != State.CanSkill && Vector3.Distance(this.transform.position, neareastObject.transform.position) < 2.0f)
+                    curState = State.CanShoot;
+                elapsedFireTime = 0f;
+            }
+        }        
     }
 }

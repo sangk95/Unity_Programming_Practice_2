@@ -50,8 +50,8 @@ public class Unit : MonoBehaviour
                 return;
             Attack();
             isAttackReady = false;
-            if(Hp > 0)
-            StartCoroutine(AttackDelay());
+            if(this.gameObject.activeSelf)
+                StartCoroutine(AttackDelay());
             return;
         }
     }

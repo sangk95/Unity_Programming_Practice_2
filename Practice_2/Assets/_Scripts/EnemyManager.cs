@@ -4,7 +4,7 @@ using UnityEngine;
 using System;
 public class EnemyManager : MonoBehaviour
 {
-    UnitGenerator unitGenerator;
+    UnitFactory unitFactory;
     PlayerController player;
     int maxWave = 2;
     int currentEnemyCount=0;
@@ -26,11 +26,11 @@ public class EnemyManager : MonoBehaviour
     public bool IsEnemyLeft{get{return enemies.Count>0;}}
     public Vector3 GetFirstEnemy{get{return enemies[0].transform.position;}}
     */
-    public void Initialize(UnitGenerator unitGenerator, PlayerController player, int maxWave, int waveEnemyCount, float waveInterval, float enemySpawnInterval)
+    public void Initialize(UnitFactory unitFactory, PlayerController player, int maxWave, int waveEnemyCount, float waveInterval, float enemySpawnInterval)
     {
         if(isInitialized)
             return;
-        this.unitGenerator = unitGenerator;
+        this.unitFactory = unitFactory;
         this.player = player;
         this.maxWave = maxWave;
         this.waveEnemyCount = waveEnemyCount;
@@ -91,19 +91,19 @@ public class EnemyManager : MonoBehaviour
     }
     void SpawnEnemy()
     {
-        Debug.Assert(this.unitGenerator != null, "enemy factory is null!");
+        Debug.Assert(this.unitFactory != null, "enemy factory is null!");
         Debug.Assert(this.player != null, "player is null!");
         Unit unit = null;
         switch(currentWave)
         {
             case 0:
-                unit = unitGenerator.GetUnit("Enemy_A");
+                unit = unitFactory.GetUnit("Enemy_A");
                 break;
             case 1:
-                unit = unitGenerator.GetUnit("Enemy_B");
+                unit = unitFactory.GetUnit("Enemy_B");
                 break;
             case 2:
-                unit = unitGenerator.GetUnit("Enemy_C");
+                unit = unitFactory.GetUnit("Enemy_C");
                 break;
         }
         unit.Activate(GetEnemySpawnPosition(), player.GetPosition);
@@ -130,7 +130,7 @@ public class EnemyManager : MonoBehaviour
         unit.AttackPlayer -= this.OnAttackPlayer;
         int index = enemies.IndexOf(unit);
         enemies.RemoveAt(index); 
-        unitGenerator.Restore(unit, unit.name);
+        unitFactory.Restore(unit, unit.name);
         EnemyDestroyed?.Invoke();
         if (currentWave == maxWave-1 && enemies.Count == 0)
         {
@@ -156,7 +156,7 @@ public class EnemyManager : MonoBehaviour
         
         foreach(var unit in enemies)
         {
-            unitGenerator.Restore(unit, unit.name);
+            unitFactory.Restore(unit, unit.name);
         }
     }
 }

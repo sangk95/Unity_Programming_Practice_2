@@ -41,7 +41,7 @@ public class GameManager : MonoBehaviour
         player.transform.position = playerPosition.position;
         timeManager = gameObject.AddComponent<TimeManager>();
         enemyManager = gameObject.AddComponent<EnemyManager>();
-        enemyManager.Initialize(new UnitGenerator(unitPrefab), player, maxWave, waveEnemyCount, waveInterval, enemySpawnInterval);
+        enemyManager.Initialize(new UnitFactory(unitPrefab), player, maxWave, waveEnemyCount, waveInterval, enemySpawnInterval);
         fireController = new FireController(enemyManager, player);
         scoreManager = new ScoreManager(scorePerEnemy, scorePerHP);
 
@@ -60,7 +60,7 @@ public class GameManager : MonoBehaviour
         enemyManager.EnemyDestroyed += scoreManager.OnEnemyDestroyed;
         enemyManager.AllEnemyDestroyed += this.OnAllEnemyDestroyed;
         enemyManager.WaveStarted += uIRoot.OnWaveChanged;
-        enemyManager.WaveEnd += player.SetPosition;
+        enemyManager.WaveEnd += player.SetDefaultPosition;
 
         enemyManager.AttackPlayer += player.Attacked;
         foreach(var back in backGround)
@@ -91,7 +91,7 @@ public class GameManager : MonoBehaviour
         enemyManager.EnemyDestroyed -= scoreManager.OnEnemyDestroyed;
         enemyManager.AllEnemyDestroyed -= this.OnAllEnemyDestroyed;
         enemyManager.WaveStarted -= uIRoot.OnWaveChanged;
-        enemyManager.WaveEnd -= player.SetPosition;
+        enemyManager.WaveEnd -= player.SetDefaultPosition;
         enemyManager.AttackPlayer -= player.Attacked;
         foreach(var back in backGround)
         {
