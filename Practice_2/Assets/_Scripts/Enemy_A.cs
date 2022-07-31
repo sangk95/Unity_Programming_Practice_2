@@ -14,7 +14,7 @@ public class Enemy_A :  Unit
     {
         isActivated = false;
         Destroyed?.Invoke(this);
-        Hp=1;
+        Hp=2;
     }
     void Update()
     {

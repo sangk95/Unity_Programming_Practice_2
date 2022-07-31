@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
-[CreateAssetMenu]
+[CreateAssetMenu(menuName ="Scriptable Object/AudioStorage")]
 public class AudioStorage : ScriptableObject
 {
     [SerializeField]

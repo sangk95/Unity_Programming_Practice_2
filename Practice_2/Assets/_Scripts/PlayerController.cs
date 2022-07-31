@@ -110,7 +110,7 @@ public class PlayerController : MonoBehaviour
         while(Vector3.Distance(this.transform.position, new Vector3(0,-4,0)) > 0.1f)
         {
             this.transform.position = Vector3.MoveTowards(this.transform.position, new Vector3(0,-4,0),Time.deltaTime*2);
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(new Vector3(0,0,0)), Time.deltaTime*2);
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(new Vector3(0,0,0)), Time.deltaTime*10);
             yield return null;
         }
     }

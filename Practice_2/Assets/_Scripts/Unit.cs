@@ -98,7 +98,7 @@ public class Unit : MonoBehaviour
         Quaternion targetRotation = Quaternion.LookRotation(transform.forward, dir);
         while(true)
         {
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime*5);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 0.1f);
             if(transform.rotation == targetRotation)
                 yield break;
             yield return null;
