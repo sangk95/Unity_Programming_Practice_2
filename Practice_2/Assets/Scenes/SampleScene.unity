@@ -785,7 +785,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 50, y: 50}
   m_Pivot: {x: 1, y: 0}
 --- !u!1 &571461423
@@ -1435,10 +1435,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scorePerEnemy: 10
   scorePerHP: 100
+  objPrefab:
+  - {fileID: 3346273992888129523, guid: f3da033711dfb8e4ca699d316f39f4b8, type: 3}
+  - {fileID: 3346273992888129523, guid: 6865f00d67abadc4cbd0fde385bb8d46, type: 3}
   unitPrefab:
   - {fileID: 5039146375007334216, guid: 19451a6dd86a9dd43b0e10956d439b3d, type: 3}
   - {fileID: 5320642867037063478, guid: a5af7ebc1e8b07349afc08ed411a7a19, type: 3}
-  maxWave: 2
+  - {fileID: -8200036410264244006, guid: c727a5a4dd7b94045b288553118cd775, type: 3}
+  maxWave: 3
   waveEnemyCount: 5
   waveInterval: 5
   enemySpawnInterval: 0.5

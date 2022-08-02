@@ -4,45 +4,24 @@ using UnityEngine;
 
 public class Factory
 {
-    List<RecycleObject> pool = new List<RecycleObject>();
+    RecycleObject[] prefab;
     int defaultPoolSize;
-    RecycleObject prefab;
+    Generator generator = new Generator();
 
-    public Factory(RecycleObject prefab, int defaultPoolSize = 5)
+    public Factory(RecycleObject[] prefab, int defaultPoolSize = 5)
     {
         this.prefab = prefab;
         this.defaultPoolSize = defaultPoolSize;
-
         Debug.Assert(this.prefab!=null, "Prefab is null");
     }
-
-    void CreatePool()
+    public RecycleObject GetObject(string unit)
     {
-        for(int i=0 ; i<defaultPoolSize ; i++)
-        {
-            RecycleObject obj = GameObject.Instantiate(prefab) as RecycleObject;
-            obj.gameObject.SetActive(false);
-            pool.Add(obj);
-        }
+        RecycleObject returnUnit = generator.Get(prefab, unit, defaultPoolSize);
+
+        return returnUnit;
     }
-
-    public RecycleObject Get()
+    public void Restore(RecycleObject obj, string unit)
     {
-        if(pool.Count == 0)
-        {
-            CreatePool();
-        }
-        int lastIndex = pool.Count-1;
-        RecycleObject obj = pool[lastIndex];
-        pool.RemoveAt(lastIndex);
-        obj.gameObject.SetActive(true);
-        return obj;
-    }
-
-    public void Restore(RecycleObject obj)
-    {
-        Debug.Assert(obj != null, "Null object to be returned!");
-        obj.gameObject.SetActive(false);
-        pool.Add(obj);
+        generator.Restore(obj, unit);
     }
 }

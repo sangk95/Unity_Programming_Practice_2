@@ -9,6 +9,8 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     int scorePerHP = 100;
     [SerializeField]
+    RecycleObject[] objPrefab;
+    [SerializeField]
     Unit[] unitPrefab;
     [SerializeField]
     int maxWave = 2;
@@ -39,6 +41,7 @@ public class GameManager : MonoBehaviour
     {
         player = Instantiate(playerPrefab);
         player.transform.position = playerPosition.position;
+        player.Initialize(new Factory(objPrefab));
         timeManager = gameObject.AddComponent<TimeManager>();
         enemyManager = gameObject.AddComponent<EnemyManager>();
         enemyManager.Initialize(new UnitFactory(unitPrefab), player, maxWave, waveEnemyCount, waveInterval, enemySpawnInterval);

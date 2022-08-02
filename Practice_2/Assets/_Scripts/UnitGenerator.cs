@@ -22,6 +22,11 @@ class UnitGenerator
             case "Enemy_B":
                 returnUnit = CreateUnit(prefab[1], unit);
                 break;
+            case "Enemy_C":
+                returnUnit = CreateUnit(prefab[2], unit);
+                break;
+            default:
+                break;
         }
         return returnUnit;
     }

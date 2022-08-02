@@ -6,7 +6,7 @@ public class EnemyManager : MonoBehaviour
 {
     UnitFactory unitFactory;
     PlayerController player;
-    int maxWave = 2;
+    int maxWave = 3;
     int currentEnemyCount=0;
     int waveEnemyCount = 5;
     int currentWave=0;
@@ -68,6 +68,13 @@ public class EnemyManager : MonoBehaviour
                 yield return new WaitForSeconds(enemySpawnInterval); 
             else
                 yield return null;
+
+            if(currentWave == maxWave-1)
+            {
+                SpawnBoss();
+                yield break;
+            }
+
             if(currentEnemyCount == 0 && currentWave != 0)
             {
                 SpawnEnemy();
@@ -89,6 +96,19 @@ public class EnemyManager : MonoBehaviour
             enemy.ResetRotation(player.GetPosition);
         }
     }
+    void SpawnBoss()
+    {
+        Debug.Assert(this.unitFactory != null, "enemy factory is null!");
+        Debug.Assert(this.player != null, "player is null!");
+        Unit unit = null;
+
+        unit = unitFactory.GetUnit("Enemy_C");
+        unit.Activate(GetEnemySpawnPosition(), player.GetPosition);
+        unit.Destroyed += this.OnEnemyDestroyed;
+        unit.AttackedBySword += this.OnEnemyAttacked;
+        unit.AttackPlayer += this.OnAttackPlayer;
+        enemies.Add(unit);
+    }
     void SpawnEnemy()
     {
         Debug.Assert(this.unitFactory != null, "enemy factory is null!");
@@ -102,8 +122,7 @@ public class EnemyManager : MonoBehaviour
             case 1:
                 unit = unitFactory.GetUnit("Enemy_B");
                 break;
-            case 2:
-                unit = unitFactory.GetUnit("Enemy_C");
+            default:
                 break;
         }
         unit.Activate(GetEnemySpawnPosition(), player.GetPosition);

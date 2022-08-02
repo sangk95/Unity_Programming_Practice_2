@@ -11,10 +11,6 @@ public class PlayerController : MonoBehaviour
     PlayMode playmode;
     State curState;
     [SerializeField]
-    Sword swordPrefab;
-    [SerializeField]
-    Sword skillPrefab;
-    [SerializeField]
     int swordDamage = 1;
     int hp=50;
     float moveSpeed = 0.01f;
@@ -25,11 +21,11 @@ public class PlayerController : MonoBehaviour
     bool canShoot = true; 
     bool canSkill = true;
     bool isGameStarted = false;
+    bool isInitialized = false;
     Rigidbody2D body;
     BoxCollider2D box;
     GameObject targetObject;
-    Factory swordFactory;
-    Factory skillFactory;
+    Factory factory;
     public Action FindEnemy;
     public Action AllHPDestroyed;
     public Action StopMoved;
@@ -39,6 +35,16 @@ public class PlayerController : MonoBehaviour
     public Vector3 GetPosition{get{return this.transform.position;}}
     public int HPCount => hp;
     public int GetSwordDamage => swordDamage;
+
+
+    public void Initialize(Factory factory)
+    {
+        if(isInitialized)
+            return;
+        this.factory = factory;
+
+        isInitialized = true;
+    }
     void Awake()
     {
         playmode = PlayMode.Manual;
@@ -47,11 +53,6 @@ public class PlayerController : MonoBehaviour
         box = GetComponent<BoxCollider2D>();
         body.bodyType = RigidbodyType2D.Kinematic;
         box.isTrigger = true;
-    }
-    void Start()
-    {
-        swordFactory = new Factory(swordPrefab);
-        skillFactory = new Factory(skillPrefab);
     }
     public void Gamestart()
     {
@@ -71,36 +72,28 @@ public class PlayerController : MonoBehaviour
             return;
         StartCoroutine(SetFirePosition(position));
     }*/
-    void Fire()
+    void Fire(string attackMode)
     {
         StopMoved?.Invoke();
-        RecycleObject sword = swordFactory.Get();
-        Vector3 startPosition = this.transform.position + this.transform.up*0.6f;
-        sword.Activate(startPosition, this.transform.up);
-        sword.Destroyed += this.SwordDestroy;
-        AudioManager.instance.PlaySound(SoundId.Shoot);
-        canShoot = false;
-    }
-    void FireSkill()
-    {
-        StopMoved?.Invoke();
-        RecycleObject skill = skillFactory.Get();
-        Vector3 startPosition = this.transform.position + this.transform.up*0.6f;
-        skill.Activate(startPosition, this.transform.up);
-        skill.Destroyed += this.SkillDestroy;
-        AudioManager.instance.PlaySound(SoundId.Shoot);
-        canSkill = false;
-    }
-    /*
-    IEnumerator SetFirePosition(Vector3 position)
-    {
-        while(Vector3.Distance(this.transform.position, position) > 0.1f)
+        RecycleObject obj = null;
+        switch(attackMode)
         {
-            this.transform.position = Vector3.MoveTowards(this.transform.position, position,moveSpeed*Time.deltaTime);
-            yield return null;
+            case "Normal_1":
+                obj = factory.GetObject(attackMode);
+                canShoot = false;
+                break;
+            case "Skill_1":
+                obj = factory.GetObject(attackMode);
+                canSkill = false;
+                break;
+            default:
+                break;                
         }
-        Fire();
-    }*/
+        Vector3 startPosition = this.transform.position + this.transform.up*0.6f;
+        obj.Activate(startPosition, this.transform.up);
+        obj.Destroyed += this.Destroy;
+        AudioManager.instance.PlaySound(SoundId.Shoot);
+    }
     public void SetDefaultPosition()
     {
         StartCoroutine(SetDefaultPosition_());
@@ -114,17 +107,11 @@ public class PlayerController : MonoBehaviour
             yield return null;
         }
     }
-    void SwordDestroy(RecycleObject usedSword)
+    void Destroy(RecycleObject usedObject)
     {
-        usedSword.Destroyed -= this.SwordDestroy;
-        swordFactory.Restore(usedSword);
+        usedObject.Destroyed -= this.Destroy;
+        factory.Restore(usedObject, usedObject.name);
         AudioManager.instance.PlaySound(SoundId.Shoot);
-    }
-    void SkillDestroy(RecycleObject usedSkill)
-    {
-        usedSkill.Destroyed -= this.SkillDestroy;
-        skillFactory.Restore(usedSkill);
-        AudioManager.instance.PlaySound(SoundId.SwordExplosion);
     }
     public void Attacked(int damage)
     {
@@ -207,11 +194,11 @@ public class PlayerController : MonoBehaviour
                 PlayerMoveManual("D", Input.mousePosition);
             if(canSkill && Input.GetKeyDown(KeyCode.Space))
             {
-                FireSkill();
+                Fire("Skill_1");
                 SkillUsed?.Invoke();
             }
             else if(canShoot && Input.GetMouseButtonDown(0))
-                Fire();
+                Fire("Normal_1");
         }
 
         // 자동모드에서 현재 상태에 따른 행동
@@ -220,12 +207,12 @@ public class PlayerController : MonoBehaviour
             switch(curState)
             {
                 case State.CanSkill:
-                    FireSkill();
+                    Fire("Skill_1");
                     SkillUsed?.Invoke();
                     break;
                 
                 case State.CanShoot:
-                    Fire();
+                    Fire("Normal_1");
                     break;
                 
                 case State.MovetoAttack:
