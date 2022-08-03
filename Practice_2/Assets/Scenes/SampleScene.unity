@@ -1442,10 +1442,6 @@ MonoBehaviour:
   - {fileID: 5039146375007334216, guid: 19451a6dd86a9dd43b0e10956d439b3d, type: 3}
   - {fileID: 5320642867037063478, guid: a5af7ebc1e8b07349afc08ed411a7a19, type: 3}
   - {fileID: -8200036410264244006, guid: c727a5a4dd7b94045b288553118cd775, type: 3}
-  maxWave: 3
-  waveEnemyCount: 5
-  waveInterval: 5
-  enemySpawnInterval: 0.5
   playerPosition: {fileID: 1547348560}
   playerPrefab: {fileID: 2329165864308159304, guid: 40e11150833c2a8498188a9198d12709, type: 3}
   uIRoot: {fileID: 1155783832}
@@ -1453,6 +1449,8 @@ MonoBehaviour:
   - {fileID: 1979627086}
   - {fileID: 897056270}
   - {fileID: 1978298361}
+  enemySpawnDatabase: {fileID: 4900000, guid: 11584e0a8003e79469ae460bf6ceba4c, type: 3}
+  enemyStatDatabase: {fileID: 4900000, guid: 3c1f50c06ae225443aa90d4c8a7ba669, type: 3}
 --- !u!4 &1155865968
 Transform:
   m_ObjectHideFlags: 0

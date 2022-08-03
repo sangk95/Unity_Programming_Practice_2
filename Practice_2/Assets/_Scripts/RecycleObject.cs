@@ -24,7 +24,6 @@ public class RecycleObject : MonoBehaviour
         while(lifetime > 0)
         {
             lifetime -= Time.deltaTime;
-            this.transform.position += transform.up * 1.5f * Time.deltaTime;
             yield return null;
         }
         lifetime = 0.3f;

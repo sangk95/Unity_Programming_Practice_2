@@ -13,11 +13,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     int swordDamage = 1;
     int hp=50;
-    float moveSpeed = 0.01f;
+    float moveSpeed = 0.1f;
     float firedelay = 0.5f;
     float skilldelay = 3.0f;
-    float elapsedFireTime;
-    float elapsedSkillTime;
+    bool reloadingFire = false;
+    bool reloadingSkill = false;
     bool canShoot = true; 
     bool canSkill = true;
     bool isGameStarted = false;
@@ -89,7 +89,7 @@ public class PlayerController : MonoBehaviour
             default:
                 break;                
         }
-        Vector3 startPosition = this.transform.position + this.transform.up*0.6f;
+        Vector3 startPosition = this.transform.position + this.transform.up*1.0f;
         obj.Activate(startPosition, this.transform.up);
         obj.Destroyed += this.Destroy;
         AudioManager.instance.PlaySound(SoundId.Shoot);
@@ -106,6 +106,7 @@ public class PlayerController : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(new Vector3(0,0,0)), Time.deltaTime*10);
             yield return null;
         }
+        curState = State.MovetoAttack;
     }
     void Destroy(RecycleObject usedObject)
     {
@@ -134,7 +135,7 @@ public class PlayerController : MonoBehaviour
         Vector3 dir = (obj.transform.position - transform.position).normalized;
         this.transform.rotation = Quaternion.LookRotation(transform.forward, dir);
         if(Vector3.Distance(this.transform.position, obj.transform.position) > 1f)
-            this.transform.position = Vector3.MoveTowards(this.transform.position, obj.transform.position*-1, moveSpeed);
+            this.transform.position = Vector3.MoveTowards(this.transform.position, obj.transform.position*-1, moveSpeed*0.5f);
     }
     void PlayerMoveManual(string keyCode, Vector3 mousePosition)
     {
@@ -152,6 +153,8 @@ public class PlayerController : MonoBehaviour
             case "D":
                 this.transform.position += Vector3.right * moveSpeed;
                 break;
+            default:
+                break;
         }
         Vector3 point = Camera.main.ScreenToWorldPoint(mousePosition);
         point.z = 0f;
@@ -165,7 +168,21 @@ public class PlayerController : MonoBehaviour
         else
             playmode = PlayMode.Manual;
     }
-    void Update()
+    IEnumerator SkillDelay()
+    {
+        reloadingSkill = true;
+        yield return new WaitForSeconds(skilldelay);
+        canSkill = true;
+        reloadingSkill = false;
+    }
+    IEnumerator FireDelay()
+    {
+        reloadingFire = true;
+        yield return new WaitForSeconds(firedelay);
+        canShoot = true;
+        reloadingFire = false;
+    }
+    void FixedUpdate()
     {
         if(!isGameStarted)
             return;
@@ -179,6 +196,50 @@ public class PlayerController : MonoBehaviour
             targetObject = neareastObject;
         }
 
+        // 적이 존재할 때 자동모드에서의 상태 체크
+        else if(Vector3.Distance(this.transform.position, targetObject.transform.position) > 2.0f && (canShoot || canSkill))
+            curState = State.MovetoAttack;
+        else
+        {
+            if(canSkill)
+                curState = State.CanSkill;
+            else if(canShoot)
+                curState = State.CanShoot;
+            else if(!canShoot && !canSkill)
+                curState = State.MovetoAvoid;
+        }
+        
+        if(!canSkill && !reloadingSkill)
+            StartCoroutine(SkillDelay());
+        if(!canShoot && !reloadingFire)
+            StartCoroutine(FireDelay());
+        
+        // 자동모드에서 현재 상태에 따른 행동
+        else if(playmode == PlayMode.Automatic)
+        {
+            switch(curState)
+            {
+                case State.CanSkill:
+                    Fire("Skill_1");
+                    SkillUsed?.Invoke();
+                    break;
+                
+                case State.CanShoot:
+                    Fire("Normal_1");
+                    break;
+                
+                case State.MovetoAttack:
+                    PlayerMoveToAttackAuto(targetObject);
+                    break;
+                    
+                case State.MovetoAvoid:
+                    PlayerMoveToAvoidAuto(targetObject);
+                    break;
+
+                default:
+                    break;
+            }
+        }
         //수동 조작
         if(playmode == PlayMode.Manual)
         {
@@ -201,65 +262,6 @@ public class PlayerController : MonoBehaviour
                 Fire("Normal_1");
         }
 
-        // 자동모드에서 현재 상태에 따른 행동
-        else if(playmode == PlayMode.Automatic)
-        {
-            switch(curState)
-            {
-                case State.CanSkill:
-                    Fire("Skill_1");
-                    SkillUsed?.Invoke();
-                    break;
-                
-                case State.CanShoot:
-                    Fire("Normal_1");
-                    break;
-                
-                case State.MovetoAttack:
-                    PlayerMoveToAttackAuto(targetObject);
-                    break;
-                    
-                case State.MovetoAvoid:
-                    PlayerMoveToAvoidAuto(targetObject);
-                    break;
-            }
-        }
 
-        // 상태 체크
-        if(Vector3.Distance(this.transform.position, targetObject.transform.position) > 2.0f)
-            curState = State.MovetoAttack;
-        else
-        {
-            if(canSkill)
-                curState = State.CanSkill;
-            else if(canShoot)
-                curState = State.CanShoot;
-            else if(!canShoot && !canSkill)
-                curState = State.MovetoAvoid;
-        }
-        if(!canSkill)
-        {
-            elapsedSkillTime += Time.deltaTime;
-            if(elapsedSkillTime > skilldelay)
-            {
-                canSkill = true;
-                if(Vector3.Distance(this.transform.position, targetObject.transform.position) < 2.0f)
-                    curState = State.CanSkill;
-                else
-                    curState = State.MovetoAttack;
-                elapsedSkillTime = 0f;
-            }
-        }
-        if(!canShoot)
-        {
-            elapsedFireTime += Time.deltaTime;
-            if(elapsedFireTime > firedelay)
-            {
-                canShoot = true;
-                if(curState != State.CanSkill && Vector3.Distance(this.transform.position, targetObject.transform.position) < 2.0f)
-                    curState = State.CanShoot;
-                elapsedFireTime = 0f;
-            }
-        }        
     }
 }

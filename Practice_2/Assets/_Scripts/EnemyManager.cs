@@ -6,13 +6,15 @@ public class EnemyManager : MonoBehaviour
 {
     UnitFactory unitFactory;
     PlayerController player;
+    EnemySpawner enemySpawner;
     int maxWave = 3;
     int currentEnemyCount=0;
-    int waveEnemyCount = 5;
+    int waveEnemyCount = 0;
     int currentWave=0;
     float waveInterval = 5f;
     float enemySpawnInterval = 0.5f;
     bool isInitialized = false;
+    bool isSpawning = false;
     public Action EnemyDestroyed;
     public Action AllEnemyDestroyed; 
     public Action NextStage;
@@ -21,28 +23,38 @@ public class EnemyManager : MonoBehaviour
     public Action<int> WaveStarted;
     public Action<int> AttackPlayer;
     List<Unit> enemies = new List<Unit>();
+    Dictionary<string, int> EnemyTypeCount = new Dictionary<string, int>();
 
     /*  --FireController-- It's not nearest
     public bool IsEnemyLeft{get{return enemies.Count>0;}}
     public Vector3 GetFirstEnemy{get{return enemies[0].transform.position;}}
     */
-    public void Initialize(UnitFactory unitFactory, PlayerController player, int maxWave, int waveEnemyCount, float waveInterval, float enemySpawnInterval)
+    public void Initialize(EnemySpawner enemySpawner, UnitFactory unitFactory, PlayerController player)
     {
         if(isInitialized)
             return;
+        this.enemySpawner = enemySpawner;
         this.unitFactory = unitFactory;
         this.player = player;
-        this.maxWave = maxWave;
-        this.waveEnemyCount = waveEnemyCount;
-        this.waveInterval = waveInterval;
-        this.enemySpawnInterval = enemySpawnInterval;
         
         Debug.Assert(this.player != null, "building manager is null!");
 
         isInitialized = true;
     }
+    int CurWaveEnemyCount()
+    {
+        int enemyCount=0;
+        EnemyTypeCount = enemySpawner.GetEnemyTypeCount(currentWave+1);
+        foreach(var data in EnemyTypeCount)
+        {
+            enemyCount += data.Value;
+        }
+        return enemyCount;
+    }
     public void Gamestart()
     {
+        maxWave = enemySpawner.GetMaxWave;
+        waveEnemyCount = CurWaveEnemyCount();
         currentEnemyCount = 0;
         StartCoroutine(AutoSpawnEnemy());
         MovingToNextWave?.Invoke(false);
@@ -52,36 +64,28 @@ public class EnemyManager : MonoBehaviour
     {
         while(true) 
         {
-            if(currentEnemyCount >= waveEnemyCount && enemies.Count == 0)
-            {
-                WaveEnd?.Invoke();
-                currentWave++;
-                if(currentWave >= maxWave)
-                    yield break;
-                MovingToNextWave?.Invoke(true);
-                yield return new WaitForSeconds(waveInterval);
-                MovingToNextWave?.Invoke(false);
-                WaveStarted?.Invoke(currentWave+1);
-                currentEnemyCount = 0;
-            }
-            else if(currentEnemyCount < waveEnemyCount)
-                yield return new WaitForSeconds(enemySpawnInterval); 
+            if(!isSpawning)
+                StartCoroutine(SpawnEnemy());
             else
-                yield return null;
-
-            if(currentWave == maxWave-1)
             {
-                SpawnBoss();
-                yield break;
+                if(enemies.Count == 0)
+                {
+                    WaveEnd?.Invoke();
+                    currentWave++;
+                    if(currentWave >= maxWave)
+                        yield break;
+                    waveEnemyCount = CurWaveEnemyCount();
+                    MovingToNextWave?.Invoke(true);
+                    yield return new WaitForSeconds(waveInterval);
+                    MovingToNextWave?.Invoke(false);
+                    WaveStarted?.Invoke(currentWave+1);
+                    currentEnemyCount = 0;
+                    NextStage?.Invoke();
+                    isSpawning = false;
+                }
+                else
+                    yield return null;
             }
-
-            if(currentEnemyCount == 0 && currentWave != 0)
-            {
-                SpawnEnemy();
-                NextStage?.Invoke();
-            }
-            else if(currentEnemyCount < waveEnemyCount)
-                SpawnEnemy();
         }
     }
     public void resetActivate()
@@ -96,42 +100,29 @@ public class EnemyManager : MonoBehaviour
             enemy.ResetRotation(player.GetPosition);
         }
     }
-    void SpawnBoss()
+    IEnumerator SpawnEnemy()
     {
         Debug.Assert(this.unitFactory != null, "enemy factory is null!");
         Debug.Assert(this.player != null, "player is null!");
+        isSpawning = true;
         Unit unit = null;
 
-        unit = unitFactory.GetUnit("Enemy_C");
-        unit.Activate(GetEnemySpawnPosition(), player.GetPosition);
-        unit.Destroyed += this.OnEnemyDestroyed;
-        unit.AttackedBySword += this.OnEnemyAttacked;
-        unit.AttackPlayer += this.OnAttackPlayer;
-        enemies.Add(unit);
-    }
-    void SpawnEnemy()
-    {
-        Debug.Assert(this.unitFactory != null, "enemy factory is null!");
-        Debug.Assert(this.player != null, "player is null!");
-        Unit unit = null;
-        switch(currentWave)
+        foreach(var data in EnemyTypeCount)
         {
-            case 0:
-                unit = unitFactory.GetUnit("Enemy_A");
-                break;
-            case 1:
-                unit = unitFactory.GetUnit("Enemy_B");
-                break;
-            default:
-                break;
-        }
-        unit.Activate(GetEnemySpawnPosition(), player.GetPosition);
+            for(int i=0 ; i<data.Value ; i++)
+            {
+                unit = unitFactory.GetUnit(data.Key);
+                
+                unit.Activate(GetEnemySpawnPosition(), player.GetPosition);
 
-        unit.Destroyed += this.OnEnemyDestroyed;
-        unit.AttackedBySword += this.OnEnemyAttacked;
-        unit.AttackPlayer += this.OnAttackPlayer;
-        enemies.Add(unit);
-        currentEnemyCount++;
+                unit.Destroyed += this.OnEnemyDestroyed;
+                unit.AttackedBySword += this.OnEnemyAttacked;
+                unit.AttackPlayer += this.OnAttackPlayer;
+                enemies.Add(unit);
+                currentEnemyCount++;
+                yield return new WaitForSeconds(enemySpawnInterval); 
+            }
+        }
     }
     void OnEnemyAttacked(Unit unit)
     {

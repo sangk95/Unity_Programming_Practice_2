@@ -6,18 +6,32 @@ using System;
 [RequireComponent(typeof(BoxCollider2D), typeof(Rigidbody2D))]
 public class Unit : MonoBehaviour
 {
-    protected Vector3 targetPosition;    
-    protected bool isActivated = false;
-    protected int Hp;
-    protected int ATKDamage;
-    protected float moveSpeed; 
-    protected float attackDelay;
+    Vector3 targetPosition;    
+    bool isActivated = false;
+    int maxHp;
+    int curHp;
+    int ATKDamage;
+    float moveSpeed; 
+    float attackDelay = 0.5f;
     bool isAttackReady;
     BoxCollider2D box;
     Rigidbody2D body;
     public Action<Unit> Destroyed;
     public Action<Unit> AttackedBySword;
     public Action<int> AttackPlayer;
+    bool isInitialized = false;
+
+    public void Initialize(int maxHp, int ATKDamage, float Speed)
+    {
+        if(isInitialized)
+            return;
+        this.maxHp = maxHp;
+        this.ATKDamage = ATKDamage;
+        this.moveSpeed = Speed;
+
+        curHp = maxHp;
+        isInitialized = true;
+    }
     void Awake()
     {
         box = GetComponent<BoxCollider2D>();
@@ -26,7 +40,7 @@ public class Unit : MonoBehaviour
         box.isTrigger = true; 
         isAttackReady = true;
     }
-    public virtual void Activate(Vector3 startPosition, Vector3 targetPosition)
+    public void Activate(Vector3 startPosition, Vector3 targetPosition)
     {
         transform.position = startPosition;
         this.targetPosition = targetPosition;
@@ -66,16 +80,17 @@ public class Unit : MonoBehaviour
     }
     public void Attacked(int damage)
     {
-        Hp -= damage;
-        if(Hp <= 0)
+        curHp -= damage;
+        if(curHp <= 0)
             DestroySelf();
         else
             StartCoroutine(KnockBack());
     }
-    public virtual void DestroySelf()
+    public void DestroySelf()
     {
         isActivated = false;
         Destroyed?.Invoke(this);
+        curHp = maxHp;
     }
     public void ResetRotation(Vector3 targetPosition)
     {
@@ -103,5 +118,9 @@ public class Unit : MonoBehaviour
                 yield break;
             yield return null;
         }
+    }
+    void Update()
+    {
+        transform.position += transform.up * moveSpeed * Time.deltaTime;
     }
 }

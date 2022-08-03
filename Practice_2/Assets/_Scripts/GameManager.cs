@@ -13,14 +13,6 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     Unit[] unitPrefab;
     [SerializeField]
-    int maxWave = 2;
-    [SerializeField]
-    int waveEnemyCount = 5;
-    [SerializeField]
-    float waveInterval = 5f;
-    [SerializeField]
-    float enemySpawnInterval = 0.5f;
-    [SerializeField]
     Transform playerPosition;
     [SerializeField]
     PlayerController playerPrefab;
@@ -28,6 +20,10 @@ public class GameManager : MonoBehaviour
     UIRoot uIRoot;
     [SerializeField]
     BackGround[] backGround;
+    [SerializeField]
+    TextAsset enemySpawnDatabase;
+    [SerializeField]
+    TextAsset enemyStatDatabase;
     
     public Action<bool, int> GameEnded;
     bool isAllHPDestroyed = false;
@@ -35,16 +31,21 @@ public class GameManager : MonoBehaviour
     PlayerController player;
     FireController fireController;
     EnemyManager enemyManager;
+    EnemySpawner enemySpawner;
     TimeManager timeManager;
     ScoreManager scoreManager;
+
     void Start()
     {
+        Application.targetFrameRate = 60;
         player = Instantiate(playerPrefab);
         player.transform.position = playerPosition.position;
         player.Initialize(new Factory(objPrefab));
         timeManager = gameObject.AddComponent<TimeManager>();
+        // stageManager 생성 후 현재 스테이지 넘겨주는것으로 변경해야함
+        enemySpawner = new EnemySpawner(1, enemySpawnDatabase, enemyStatDatabase);
         enemyManager = gameObject.AddComponent<EnemyManager>();
-        enemyManager.Initialize(new UnitFactory(unitPrefab), player, maxWave, waveEnemyCount, waveInterval, enemySpawnInterval);
+        enemyManager.Initialize(enemySpawner, new UnitFactory(enemySpawner, unitPrefab), player);
         fireController = new FireController(enemyManager, player);
         scoreManager = new ScoreManager(scorePerEnemy, scorePerHP);
 
@@ -59,7 +60,7 @@ public class GameManager : MonoBehaviour
         player.SkillUsed += uIRoot.SkillCoolCount;
 
         //fireController.Fire += player.FireReady;
-        enemyManager.NextStage += fireController.NearestEnemy;
+        //enemyManager.NextStage += fireController.NearestEnemy;
         enemyManager.EnemyDestroyed += scoreManager.OnEnemyDestroyed;
         enemyManager.AllEnemyDestroyed += this.OnAllEnemyDestroyed;
         enemyManager.WaveStarted += uIRoot.OnWaveChanged;
@@ -90,7 +91,7 @@ public class GameManager : MonoBehaviour
         player.SkillUsed -= uIRoot.SkillCoolCount;
 
         //fireController.Fire -= player.FireReady;
-        enemyManager.NextStage -= fireController.NearestEnemy;
+        //enemyManager.NextStage -= fireController.NearestEnemy;
         enemyManager.EnemyDestroyed -= scoreManager.OnEnemyDestroyed;
         enemyManager.AllEnemyDestroyed -= this.OnAllEnemyDestroyed;
         enemyManager.WaveStarted -= uIRoot.OnWaveChanged;

@@ -1,0 +1,4 @@
+Name	Speed	HP	ATK
+Enemy_A	2	2	1
+Enemy_B	1	5	1
+Enemy_C	2	10	1
