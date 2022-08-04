@@ -47,7 +47,8 @@ public class Unit : MonoBehaviour
         if(!isActivated)
             transform.rotation = Quaternion.Euler(0,0,180);
         Vector3 dir = (targetPosition - startPosition).normalized;
-        StartCoroutine(slerpRotation(dir));
+        transform.rotation = Quaternion.LookRotation(transform.forward, dir);
+        //StartCoroutine(slerpRotation(dir));
         isActivated = true;
     }
 
@@ -96,7 +97,8 @@ public class Unit : MonoBehaviour
     {
         this.targetPosition = targetPosition;
         Vector3 dir = (targetPosition - transform.position).normalized;
-        StartCoroutine(slerpRotation(dir));
+        transform.rotation = Quaternion.LookRotation(transform.forward, dir);
+       // StartCoroutine(slerpRotation(dir));
     }
     IEnumerator KnockBack()
     {   

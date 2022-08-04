@@ -25,10 +25,6 @@ public class EnemyManager : MonoBehaviour
     List<Unit> enemies = new List<Unit>();
     Dictionary<string, int> EnemyTypeCount = new Dictionary<string, int>();
 
-    /*  --FireController-- It's not nearest
-    public bool IsEnemyLeft{get{return enemies.Count>0;}}
-    public Vector3 GetFirstEnemy{get{return enemies[0].transform.position;}}
-    */
     public void Initialize(EnemySpawner enemySpawner, UnitFactory unitFactory, PlayerController player)
     {
         if(isInitialized)
