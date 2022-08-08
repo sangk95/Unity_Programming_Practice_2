@@ -6,6 +6,7 @@ class UnitGenerator
 {
     Dictionary<string, List<Unit>> pool = new Dictionary<string, List<Unit>>();
     int defaultPoolSize;
+    
 
     ///////Get을 추상메소드로 선언한 후 자식클래스에서 각자 어떤 객체를 생성할지 결정한다면 팩토리메소드패턴이다.
     ///////자식클래스에서 생성할 객체의 세부정보를 가지고 있는 인터페이스를 따로 만들어 관리한다면 추상팩토리패턴이다.

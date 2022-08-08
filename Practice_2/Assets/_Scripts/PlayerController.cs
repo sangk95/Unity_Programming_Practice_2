@@ -7,9 +7,9 @@ using System.Linq;
 public class PlayerController : MonoBehaviour
 {
     public enum PlayMode{Manual, Automatic}
-    enum State{CanShoot, CanSkill, MovetoAttack, MovetoAvoid}
+    enum State{CanAttack, CanShoot, CanSkill, MovetoAttack, MovetoAvoid}
     PlayMode playmode;
-    State curState;
+    State playerState;
     [SerializeField]
     int swordDamage = 1;
     int hp=50;
@@ -48,7 +48,7 @@ public class PlayerController : MonoBehaviour
     void Awake()
     {
         playmode = PlayMode.Manual;
-        curState = State.MovetoAttack;
+        playerState = State.MovetoAttack;
         body = GetComponent<Rigidbody2D>();
         box = GetComponent<BoxCollider2D>();
         body.bodyType = RigidbodyType2D.Kinematic;
@@ -106,7 +106,7 @@ public class PlayerController : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(new Vector3(0,0,0)), Time.deltaTime*10);
             yield return null;
         }
-        curState = State.MovetoAttack;
+        playerState = State.MovetoAttack;
     }
     void Destroy(RecycleObject usedObject)
     {
@@ -186,54 +186,55 @@ public class PlayerController : MonoBehaviour
     {
         if(!isGameStarted)
             return;
-        // 가장 가까운적 탐색(LinQ) -> 처치 시 재탐색
-        if(targetObject == null || !targetObject.activeSelf)
-        {
-            var objects = GameObject.FindGameObjectsWithTag("Enemy").ToList();
-            var neareastObject = objects.OrderBy(obj => {return Vector3.Distance(this.transform.position, obj.transform.position);}).FirstOrDefault();
-            if(neareastObject == null)
-                return;
-            targetObject = neareastObject;
-        }
 
-        // 적이 존재할 때 자동모드에서의 상태 체크
-        else if(Vector3.Distance(this.transform.position, targetObject.transform.position) > 2.0f && (canShoot || canSkill))
-            curState = State.MovetoAttack;
-        else
-        {
-            if(canSkill)
-                curState = State.CanSkill;
-            else if(canShoot)
-                curState = State.CanShoot;
-            else if(!canShoot && !canSkill)
-                curState = State.MovetoAvoid;
-        }
-        
-        if(!canSkill && !reloadingSkill)
-            StartCoroutine(SkillDelay());
-        if(!canShoot && !reloadingFire)
-            StartCoroutine(FireDelay());
-        
         // 자동모드에서 현재 상태에 따른 행동
-        else if(playmode == PlayMode.Automatic)
+        if(playmode == PlayMode.Automatic)
         {
-            switch(curState)
+            // 가장 가까운적 탐색(LinQ) -> 처치 시 재탐색
+            if(targetObject == null || !targetObject.activeSelf)
             {
+                var objects = GameObject.FindGameObjectsWithTag("Enemy").ToList();
+                var neareastObject = objects.OrderBy(obj =>
+                 {return Vector3.Distance(this.transform.position, obj.transform.position);}).FirstOrDefault();
+                if(neareastObject == null)
+                    return;
+                targetObject = neareastObject;
+            }
+
+            switch(playerState)
+            {
+                case State.CanAttack:
+                    if(canSkill)
+                        playerState = State.CanSkill;
+                    else if(canShoot)
+                        playerState = State.CanShoot;
+                    break;
+
                 case State.CanSkill:
                     Fire("Skill_1");
                     SkillUsed?.Invoke();
+                    playerState = State.MovetoAttack;
                     break;
                 
                 case State.CanShoot:
                     Fire("Normal_1");
+                    playerState = State.MovetoAttack;
                     break;
                 
                 case State.MovetoAttack:
-                    PlayerMoveToAttackAuto(targetObject);
+                    if(!canShoot && !canSkill)
+                        playerState = State.MovetoAvoid;
+                    else if(Vector3.Distance(this.transform.position, targetObject.transform.position) > 2.0f)
+                        PlayerMoveToAttackAuto(targetObject);
+                    else
+                        playerState = State.CanAttack;
                     break;
                     
                 case State.MovetoAvoid:
-                    PlayerMoveToAvoidAuto(targetObject);
+                    if(canShoot || canSkill)
+                        playerState = State.MovetoAttack;
+                    else
+                        PlayerMoveToAvoidAuto(targetObject);
                     break;
 
                 default:
@@ -241,7 +242,7 @@ public class PlayerController : MonoBehaviour
             }
         }
         //수동 조작
-        if(playmode == PlayMode.Manual)
+        else if(playmode == PlayMode.Manual)
         {
             if(!Input.anyKey)
                 PlayerMoveManual("", Input.mousePosition);
@@ -261,7 +262,10 @@ public class PlayerController : MonoBehaviour
             else if(canShoot && Input.GetMouseButtonDown(0))
                 Fire("Normal_1");
         }
-
-
+        
+        if(!canSkill && !reloadingSkill)
+            StartCoroutine(SkillDelay());
+        if(!canShoot && !reloadingFire)
+            StartCoroutine(FireDelay());
     }
 }
